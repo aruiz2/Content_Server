@@ -1,7 +1,7 @@
 from optparse import OptionParser
 from config_file_parse import CFParser
 
-
+#test commit
 if __name__ == '__main__':
     '''Parse the input'''
     parser_t = OptionParser() 
