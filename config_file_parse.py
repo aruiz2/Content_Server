@@ -11,9 +11,10 @@ class CFParser():
 
         self.uuid =  self.config_file_dict['uuid']
         self.name = self.config_file_dict['name']
-        self.backend_port = self.config_file_dict['backend_port']
+        self.backend_port = int(self.config_file_dict['backend_port'])
         self.peer_count = self.config_file_dict['peer_count']
         self.peer_0 = self.config_file_dict['peer_0']
+        self.peer_0_host = self.__get_host_peer_0()
         self.peer_1 = self.config_file_dict['peer_1']
 
     def __get_config_file_str(self, config_file_path):
@@ -31,6 +32,11 @@ class CFParser():
         cf_dict = {}
         for line in Lines:
             words = line.split('=')
-            key = words[0][:-1]; val = words[1][:-1]
+            key = words[0][:-1]; val = words[1][1:][:-1] #this just removes spacing
             cf_dict[key] = val
         return cf_dict
+
+    def __get_host_peer_0(self):
+        peer_0 = self.config_file_dict['peer_0']
+        peer_0_elems = peer_0.split(",")
+        return peer_0_elems[1][1:]
