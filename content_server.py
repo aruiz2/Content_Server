@@ -1,7 +1,7 @@
 from optparse import OptionParser
 from config_file_parse import CFParser
-import socket, sys, time
-from node_thread import external_node_thread
+import socket, sys, time, threading
+import node_thread as nt
 
 BUFSIZE = 1024
 
@@ -15,8 +15,8 @@ if __name__ == '__main__':
     #parse the config file
     parser_cf = CFParser(options.cf_path)
 
-    #create thread that accepts connections from other machine s
-    external_node_thread(parser_cf)
+    #create threads that acts as server and client for every node
+    nt.start_client_server_threads(parser_cf)
 
     while True:
 
