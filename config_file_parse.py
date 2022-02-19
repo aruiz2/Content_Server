@@ -12,10 +12,9 @@ class CFParser():
         self.uuid =  self.config_file_dict['uuid']
         self.name = self.config_file_dict['name']
         self.backend_port = int(self.config_file_dict['backend_port'])
-        self.peer_count = self.config_file_dict['peer_count']
-        self.peer_0 = self.config_file_dict['peer_0']
-        self.peer_0_host = self.__get_host_peer_0()
-        self.peer_1 = self.config_file_dict['peer_1']
+        self.peer_count = int(self.config_file_dict['peer_count'])
+
+        self.peers = self.__get_peers()
 
     def __get_config_file_str(self, config_file_path):
         '''
@@ -36,7 +35,18 @@ class CFParser():
             cf_dict[key] = val
         return cf_dict
 
-    def __get_host_peer_0(self):
-        peer_0 = self.config_file_dict['peer_0']
-        peer_0_elems = peer_0.split(",")
-        return peer_0_elems[1][1:]
+
+    def __get_peers(self):
+        n = self.peer_count
+        peers = []
+        for i in range(n):
+            peer = "peer_" + str(i)
+            peer_elems = self.config_file_dict[peer].split(',')
+            n_peer_elems = len(peer_elems)
+
+            for i_elem in range(n_peer_elems):
+                peer_elems[i_elem] = peer_elems[i_elem][1:]
+        
+            peers.append(peer_elems)
+
+        return peers

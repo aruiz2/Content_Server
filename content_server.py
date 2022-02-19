@@ -4,6 +4,9 @@ import socket, sys, time, threading
 import node_thread as nt
 
 BUFSIZE = 1024
+threadLock = threading.Lock()
+graph = dict()
+nodes_uuid = dict()
 
 #test commit
 if __name__ == '__main__':
@@ -14,6 +17,14 @@ if __name__ == '__main__':
 
     #parse the config file
     parser_cf = CFParser(options.cf_path)
+
+    #add new node to our global variable
+    graph[parser_cf.name] = {}
+
+    nodes_uuid[parser_cf.uuid] = parser_cf.name
+    #still need to add as a neighbor the peer_1
+
+    print(parser_cf.peers)
 
     #create threads that acts as server and client for every node
     nt.start_client_server_threads(parser_cf)
