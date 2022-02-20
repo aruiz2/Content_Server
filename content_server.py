@@ -25,6 +25,7 @@ if __name__ == '__main__':
     nodes_uuid[parser_cf.uuid] = parser_cf.name
     threadLock.release()
 
+    print(graph)
     #still need to add as a neighbor the peer_1
 
     #create threads that acts as server and client for every node
@@ -37,7 +38,8 @@ if __name__ == '__main__':
             print("Adding neighbor...\n")
     
         elif command == "uuid":
-            print("Node identifier...\n")
+            uuid_dict = {"uuid": parser_cf.uuid}
+            print(uuid_dict)
 
         elif command == "neighbors":
             print("Node neighbors...\n")

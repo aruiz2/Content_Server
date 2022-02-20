@@ -39,6 +39,7 @@ class CFParser():
     def __get_peers(self):
         n = self.peer_count
         peers = []
+        print(n)
         for i in range(n):
             peer = "peer_" + str(i)
             peer_elems = self.config_file_dict[peer].split(',')
