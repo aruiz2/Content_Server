@@ -2,6 +2,7 @@ from optparse import OptionParser
 from config_file_parse import CFParser
 import socket, sys, time, threading
 import node_thread as nt
+import build_graph as bg
 
 BUFSIZE = 1024
 threadLock = threading.Lock()
@@ -18,13 +19,13 @@ if __name__ == '__main__':
     #parse the config file
     parser_cf = CFParser(options.cf_path)
 
-    #add new node to our global variable
-    graph[parser_cf.name] = {}
-
+    #add node to graph and uuid global variables
+    threadLock.acquire()
+    bg.add_node_to_graph(graph, parser_cf)
     nodes_uuid[parser_cf.uuid] = parser_cf.name
-    #still need to add as a neighbor the peer_1
+    threadLock.release()
 
-    print(parser_cf.peers)
+    #still need to add as a neighbor the peer_1
 
     #create threads that acts as server and client for every node
     nt.start_client_server_threads(parser_cf)

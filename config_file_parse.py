@@ -50,3 +50,14 @@ class CFParser():
             peers.append(peer_elems)
 
         return peers
+
+
+'''
+Gets the uuid of every peer and returns it in a list of strings
+'''
+def get_peers_uuids(peers):
+    #peers = [['uuid1', 'host1', 'port1', 'd1'], ... , [, , , ]]
+    peers_uuids = []
+    for peer in peers:
+        peers_uuids.append(peer[0])
+    return peers_uuids
