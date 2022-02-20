@@ -39,7 +39,9 @@ if __name__ == '__main__':
             print("Adding neighbor...\n")
     
         elif command == "uuid":
+            threadLock.acquire()
             print_uuid(parser_cf, threadLock)
+            threadLock.release()
 
         elif command == "neighbors":
             print("Node neighbors...\n")
