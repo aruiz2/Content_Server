@@ -1,5 +1,6 @@
 from optparse import OptionParser
 from config_file_parse import CFParser
+from print_uuid import print_uuid
 import socket, sys, time, threading
 import node_thread as nt
 import build_graph as bg
@@ -38,8 +39,7 @@ if __name__ == '__main__':
             print("Adding neighbor...\n")
     
         elif command == "uuid":
-            uuid_dict = {"uuid": parser_cf.uuid}
-            print(uuid_dict)
+            print_uuid(parser_cf, threadLock)
 
         elif command == "neighbors":
             print("Node neighbors...\n")
