@@ -14,6 +14,11 @@ uuid_connected = set()
 start = time.clock()
 
 
+def print_lock(message):
+    threadLock.acquire()
+    print(message)
+    threadLock.release()
+
 def content_server():
      #parse the input
     parser_t = OptionParser() 

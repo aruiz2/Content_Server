@@ -2,72 +2,78 @@ import socket, sys, threading
 from content_server import *
 
 def start_client_server_threads(parser_cf):
-    server = threading.Thread(target = server_thread, args = (parser_cf, ), daemon = True)
-    server.start()
+    #create and start client thread
+    client = threading.Thread(target = send_keep_alive_signal, args = (parser_cf, ), daemon = True)
+    client.start()
 
-def server_thread(parser_cf):
-
-    #create socket
+    #create server socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_ip = socket.gethostbyname(socket.gethostname())
     address = (server_ip, parser_cf.backend_port)
+    print("server_ip:", server_ip)
+    #print("server port: ", parser_cf.backend_port)
 
     #bind socket
     try:
         s.bind(address)
     except socket.error as e:
+        threadLock.acquire()
         print('Error when binding in server thread' , address,
         ' .\n\t'+str(e))
+        threadLock.release()
         sys.exit(-1)
 
     #listen for new connections
     s.listen()
-    
-    #create and start client thread
-    client = threading.Thread(target = client_thread, args = (parser_cf, ), daemon = True)
-    client.start()
+
+    server = threading.Thread(target = server_thread, args = (parser_cf, s), daemon = True)
+    server.start()
+
+def server_thread(parser_cf, s):
 
     while True:
         # accept a connection
-        print("before accept")
+        print_lock("before accept")
         connection_socket, client_address = s.accept()
-        print("after accept")
+        print_lock("after accept")
 
         #accept message
-        msg_string = s.recv(BUFSIZE).decode()
+        msg_string = connection_socket.recv(BUFSIZE).decode()
         print("Received message ", msg_string)
 
     s.close()
 
-def client_thread(parser_cf,):
-    send_keep_alive_signal(parser_cf,)
-
 def send_keep_alive_signal(parser_cf,):
     
-    #create socket
+    #create client
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_ip = socket.gethostbyname(socket.gethostname())
 
     #get peers uuids
+    peers = parser_cf.get_peers()
     peers_uuids = [peer[0] for peer in parser_cf.peers]
 
-    print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
-    for peer_uuid in peers_uuids:
-        #obtain peer data
-        peer = graph[peer_uuid]
-        peer_port = peer['backend_port']
-        
-        #try connecting and sending signal to peer
-        server_address = (server_ip, peer_port)
-        connected = True
-        try:
-            s.connect(server_address)
-        except:
-            print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, peer_port))
-            connected = False
-        
-        #send keep alive signal if connected
-        if connected:
-            s.send("hello".encode())
+    #constantly send keep_alive_signals
+    while True:
+        #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
+        for peer in peers: #peeer = [uuid, hostname, port, peer_count]
+            peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]
+            server_ip = socket.gethostbyname(peer_host[1:]) #TODO: THIS WOULD CHANGE SINCE WE NEED TO IMPLEMENT ROBUST PARSER FOR WHITESPACES
+            #threadLock.acquire(); print("sending info to server_ip", server_ip, "with port", peer_port); threadLock.release()
+            
+            #try connecting and sending signal to peer
+            server_address = (server_ip, int(peer_port[1:])) #TODO: THIS WOULD CHANGE SINCE WE NEED TO IMPLEMENT ROBUST PARSER FOR WHITESPACES
+            connected = True
+            try:
+                s.connect(server_address)
+            except:
+                threadLock.acquire()
+                #print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, int(peer_port[1:]))) #TODO: THIS WOULD CHANGE SINCE WE NEED TO IMPLEMENT ROBUST PARSER FOR WHITESPACES
+                threadLock.release()
+                connected = False
+            
+            #send keep alive signal if connected
+            if connected:
+                print_lock("Successfully sent Kill signal!")
+                s.send("hello".encode())
