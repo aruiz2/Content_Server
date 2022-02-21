@@ -40,12 +40,14 @@ def server_thread(parser_cf, s):
 
         #accept message
         msg_string = connection_socket.recv(BUFSIZE).decode() #this will be the uuid of peer
-        update_uuid_in_connected_dict(msg_string)
+        
+        #make updates to uuid_connected
+        threadLock.acquire()
+        update_connected_dict(msg_string)
         remove_from_connected_dict()
+        threadLock.release()
     
-        #threadLock.acquire(); print(cs.uuid_connected); threadLock.release()
         #print("Received message", msg_string)
-
 
     s.close()
 
@@ -57,12 +59,19 @@ def send_keep_alive_signal(parser_cf,):
 
     #constantly send keep_alive_signals
     while True:
+        #make updates to uuid_connected
+        threadLock.acquire()
+        remove_from_connected_dict()
+        threadLock.release()
+
         #create client socket
+        threadLock.acquire(); print(cs.uuid_connected); threadLock.release()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
+        #threadLock.acquire(); print(peers); threadLock.release()
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
-        for peer in peers: #peeer = [uuid, hostname, port, peer_count]
+        for peer in peers: #peeer = [uuid, hostname, port, peer_count]ß
             peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]
             server_ip = socket.gethostbyname(peer_host)
             
@@ -80,6 +89,18 @@ def send_keep_alive_signal(parser_cf,):
             #send keep alive signal if connected
             if connected:
                 node_uuid = parser_cf.uuid
-                s.send(node_uuid.encode())
+
+                for _ in range(3): #send 3 signals
+
+                    try:
+                        s.send(node_uuid.encode())
+                        time.sleep(0.01)
+                    except:
+                        print_lock("Disconnected node")
+
+        #update peers variable based on if anyone disconnected
+        threadLock.acquire()
+        peers = update_peers(peers)
+        threadLock.release()
 
         s.close()
