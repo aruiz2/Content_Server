@@ -59,17 +59,17 @@ def send_keep_alive_signal(parser_cf,):
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, peer_count]
             peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]
-            server_ip = socket.gethostbyname(peer_host[1:]) #TODO: THIS WOULD CHANGE SINCE WE NEED TO IMPLEMENT ROBUST PARSER FOR WHITESPACES
+            server_ip = socket.gethostbyname(peer_host)
             #threadLock.acquire(); print("sending info to server_ip", server_ip, "with port", peer_port); threadLock.release()
             
             #try connecting and sending signal to peer
-            server_address = (server_ip, int(peer_port[1:])) #TODO: THIS WOULD CHANGE SINCE WE NEED TO IMPLEMENT ROBUST PARSER FOR WHITESPACES
+            server_address = (server_ip, int(peer_port))
             connected = True
             try:
                 s.connect(server_address)
             except:
                 threadLock.acquire()
-                #print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, int(peer_port[1:]))) #TODO: THIS WOULD CHANGE SINCE WE NEED TO IMPLEMENT ROBUST PARSER FOR WHITESPACES
+                #print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, int(peer_port)))
                 threadLock.release()
                 connected = False
             

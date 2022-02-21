@@ -15,6 +15,12 @@ class CFParser():
         self.peer_count = int(self.config_file_dict['peer_count'])
 
         self.peers = self.get_peers()
+    
+    def __remove_whitespace_newline(self, msg):
+        new_str = ""
+        for letter in msg:
+            if letter != ' ' and letter != '\n': new_str += letter
+        return new_str
 
     def __get_config_file_str(self, config_file_path):
         '''
@@ -31,8 +37,12 @@ class CFParser():
         cf_dict = {}
         for line in Lines:
             words = line.split('=')
-            key = words[0][:-1]; val = words[1][1:][:-1] #this just removes spacing
-            cf_dict[key] = val
+            key = self.__remove_whitespace_newline(words[0]); val = self.__remove_whitespace_newline(words[1]) #this just removes spacing
+            
+            if key == 'backend_port' or key == 'peer_count': cf_dict[key] = int(val)
+            else: cf_dict[key] = val
+
+        print(cf_dict)
         return cf_dict
 
 
@@ -47,7 +57,7 @@ class CFParser():
             n_peer_elems = len(peer_elems)
 
             for i_elem in range(n_peer_elems):
-                peer_elems[i_elem] = peer_elems[i_elem][:]
+                peer_elems[i_elem] = peer_elems[i_elem]
         
             peers.append(peer_elems)
 
