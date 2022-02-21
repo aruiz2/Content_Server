@@ -1,5 +1,6 @@
 import socket, sys, threading
 from content_server import *
+from uuid_connected import *
 
 def start_client_server_threads(parser_cf):
     #create and start client thread
@@ -11,7 +12,8 @@ def start_client_server_threads(parser_cf):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_ip = socket.gethostbyname(socket.gethostname())
     address = (server_ip, parser_cf.backend_port)
-    print("server_ip:", server_ip)
+    
+    #print("server_ip:", server_ip)
     #print("server port: ", parser_cf.backend_port)
 
     #bind socket
@@ -37,9 +39,12 @@ def server_thread(parser_cf, s):
         connection_socket, client_address = s.accept()
 
         #accept message
-        msg_string = connection_socket.recv(BUFSIZE).decode()
-        
-        print("Received message", msg_string)
+        msg_string = connection_socket.recv(BUFSIZE).decode() #this will be the uuid of peer
+        update_uuid_in_connected_dict(msg_string)
+        remove_from_connected_dict()
+    
+        #threadLock.acquire(); print(cs.uuid_connected); threadLock.release()
+        #print("Received message", msg_string)
 
 
     s.close()
@@ -70,13 +75,10 @@ def send_keep_alive_signal(parser_cf,):
                 s.connect(server_address)
             except:
                 connected = False
-                # threadLock.acquire()
-                # #print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, int(peer_port)))
-                # threadLock.release()
+                #print_lock("Couldnt send keep alive signal\n" + str(socket.error))
             
             #send keep alive signal if connected
             if connected:
-                print_lock("Successfully sent keep alive signal!")
                 node_uuid = parser_cf.uuid
                 s.send(node_uuid.encode())
 

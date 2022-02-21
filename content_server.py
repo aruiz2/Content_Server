@@ -10,8 +10,9 @@ BUFSIZE = 1024
 threadLock = threading.Lock()
 graph = dict()
 uuid_nodes = dict()
-uuid_connected = set()
-start = time.clock()
+uuid_connected = dict()
+start_time = time.clock()
+time_limit = 3
 
 
 def print_lock(message):
