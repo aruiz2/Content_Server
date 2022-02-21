@@ -34,21 +34,17 @@ def server_thread(parser_cf, s):
 
     while True:
         # accept a connection
-        print_lock("before accept")
         connection_socket, client_address = s.accept()
-        print_lock("after accept")
 
         #accept message
         msg_string = connection_socket.recv(BUFSIZE).decode()
-        print("Received message ", msg_string)
+        
+        print("Received message", msg_string)
+
 
     s.close()
 
 def send_keep_alive_signal(parser_cf,):
-    
-    #create client
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     #get peers uuids
     peers = parser_cf.get_peers()
@@ -56,11 +52,16 @@ def send_keep_alive_signal(parser_cf,):
 
     #constantly send keep_alive_signals
     while True:
+        #create client socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, peer_count]
             peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]
             server_ip = socket.gethostbyname(peer_host)
-            #threadLock.acquire(); print("sending info to server_ip", server_ip, "with port", peer_port); threadLock.release()
+            
+            #threadLock.acquire(); print("sending to ip", server_ip, "with port", peer_port); threadLock.release()
             
             #try connecting and sending signal to peer
             server_address = (server_ip, int(peer_port))
@@ -68,12 +69,15 @@ def send_keep_alive_signal(parser_cf,):
             try:
                 s.connect(server_address)
             except:
-                threadLock.acquire()
-                #print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, int(peer_port)))
-                threadLock.release()
                 connected = False
+                # threadLock.acquire()
+                # #print("Couldnt send keep alive signal to neighbor %s at port %d" %(peer_uuid, int(peer_port)))
+                # threadLock.release()
             
             #send keep alive signal if connected
             if connected:
-                print_lock("Successfully sent Kill signal!")
-                s.send("hello".encode())
+                print_lock("Successfully sent keep alive signal!")
+                node_uuid = parser_cf.uuid
+                s.send(node_uuid.encode())
+
+        s.close()
