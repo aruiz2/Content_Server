@@ -7,7 +7,7 @@ def start_client_server_threads(parser_cf):
 
     #add peers to connected dictionary initially
     for peer_uuid in get_peers_uuids(parser_cf.get_peers()):
-        update_connected_dict(peer_uuid)
+        update_connected_dict(peer_uuid, 0)
 
     #create and start client thread
     client = threading.Thread(target = send_keep_alive_signal, args = (parser_cf, ), daemon = True)
@@ -43,9 +43,7 @@ def server_thread(parser_cf, s):
     while True:
 
         #remove inactive nodes
-        threadLock.acquire()
-        remove_from_connected_dict()
-        threadLock.release()
+        threadLock.acquire(); remove_from_connected_dict(); threadLock.release()
 
         # accept a connection
         connection_socket, client_address = s.accept()
@@ -54,9 +52,7 @@ def server_thread(parser_cf, s):
         msg_string = connection_socket.recv(BUFSIZE).decode() #this will be the uuid of peer
 
         #make updates to uuid_connected nodes times
-        threadLock.acquire()
-        update_connected_dict(msg_string)
-        threadLock.release()
+        threadLock.acquire(); update_connected_dict(msg_string); threadLock.release()
     
         #print("Received message", msg_string)
 
@@ -69,11 +65,14 @@ def send_keep_alive_signal(parser_cf,):
     
     #constantly send keep_alive_signals
     while True:
+        #threadLock.acquire(); print(cs.uuid_connected); print("still going");threadLock.release()
 
         #create client socket
-        #threadLock.acquire(); print(cs.uuid_connected); threadLock.release()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        
+        #make updates to uuid_connected nodes times
+        threadLock.acquire(); remove_from_connected_dict(); threadLock.release()
 
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, peer_count]

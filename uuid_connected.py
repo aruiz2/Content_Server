@@ -4,9 +4,11 @@ import time
 '''
 Addds uuid to connected_uuid dictionary if not in there
     -uuid: the uuid to possibly be added
+    -time: opti
 '''
-def update_connected_dict(uuid):
-    cs.uuid_connected[uuid] = time.time()
+def update_connected_dict(uuid, time_entered = -1):
+    if time_entered == -1: cs.uuid_connected[uuid] = time.time() - cs.start_time
+    else: cs.uuid_connected[uuid] = 0
     return
 '''
 Removes a uuid from the connected dictionary if 
@@ -14,8 +16,9 @@ last keep alive signal was received over our time limit.
 '''
 def remove_from_connected_dict():
     for key, val in list(cs.uuid_connected.items()):
-        time_past = time.time() - val
-        if time_past > cs.time_limit: 
+        curr_time = time.time() - cs.start_time
+        time_past = curr_time - val
+        if val != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
             cs.uuid_connected.pop(key, None)
             print("******************************************************\nRemoving %s from dictionary which had time %d and current time is %d" %(key, val, time.time()))
     return
