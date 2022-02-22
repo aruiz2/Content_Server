@@ -8,11 +8,11 @@ Addds uuid to connected_uuid dictionary if not in there
 '''
 def update_connected_dict(peer_info, time_entered = -1): #peer_info = [uuid, nodex, port]
     if time_entered == -1: 
-        peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]
+        peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
         cs.uuid_connected[peer_uuid]['time'] = time.time() - cs.start_time
         cs.uuid_connected[peer_uuid]['name'] = peer_name
         cs.uuid_connected[peer_uuid]['port'] = peer_port
-
+        cs.uuid_connected[peer_uuid]['host'] = peer_host
     else: 
         peer_uuid = peer_info[0]
         cs.uuid_connected[peer_uuid] = {'time' : 0}

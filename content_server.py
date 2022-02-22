@@ -46,12 +46,10 @@ def content_server():
             print("Adding neighbor...\n")
     
         elif command == "uuid":
-            threadLock.acquire()
-            print({"uuid": parser_cf.uuid})
-            threadLock.release()
+            threadLock.acquire(); print({"uuid": parser_cf.uuid}); threadLock.release()
 
         elif command == "neighbors":
-            print_active_neighbors()
+            threadLock.acquire(); print(uuid_connected);print_active_neighbors(uuid_connected); threadLock.release()
 
         elif command == "map":
             print("Graph Map to be printed...\n")

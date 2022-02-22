@@ -68,7 +68,7 @@ def send_keep_alive_signal(parser_cf,):
     
     #constantly send keep_alive_signals
     while True:
-        threadLock.acquire(); print(cs.uuid_connected);threadLock.release()
+        #threadLock.acquire(); print(cs.uuid_connected);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -100,7 +100,7 @@ def send_keep_alive_signal(parser_cf,):
                 for _ in range(3): #send 3 signals
                     #print("sending")
                     try:
-                        ka_signal = "ka_signal" + node_uuid + ":" + parser_cf.name + ":" + str(parser_cf.backend_port)
+                        ka_signal = "ka_signal" + node_uuid + ":" + parser_cf.name + ":" + str(parser_cf.backend_port) + ":" + str(socket.gethostname())
                         s.send(ka_signal.encode())
                         time.sleep(0.01)
                     except:
