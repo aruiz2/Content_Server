@@ -17,6 +17,7 @@ def remove_from_connected_dict():
         time_past = time.time() - val
         if time_past > cs.time_limit: 
             cs.uuid_connected.pop(key, None)
+            print("******************************************************\nRemoving %s from dictionary which had time %d and current time is %d" %(key, val, time.time()))
     return
 
 '''
@@ -25,17 +26,20 @@ of the client. Adds new peers and deletes disconnected peers
     -peers: the previous peers of the node
 '''
 def update_peers(peers):
-    #dont add peers that have disconnecteds
     new_peers = []
 
+    #dont add peers that have disconnected
     for peer in peers:
         peer_uuid = peer[0]
         if peer_uuid in cs.uuid_connected:
             new_peers.append(peer)
 
+    #TODO: IMPLEMENT SO THAT IT CAN ADD PEERS THAT WERE NOT CONNECTED. WE WOULD ALSO NEED THEIR PORT AND HOST NAME TO CONNECT TO THEM SO NEED TO THINK ABOUT THIS.
     #add peers that were not previously connected
-    for uuid in cs.uuid_connected.keys():
-        if uuid not in peers:
-            new_peers.append(uuid)
+
+    # for uuid in cs.uuid_connected.keys():
+    #     if uuid not in peers:
+    #         peer = ??
+    #         new_peers.append(uuid)
 
     return new_peers

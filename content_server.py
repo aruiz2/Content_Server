@@ -11,8 +11,9 @@ threadLock = threading.Lock()
 graph = dict()
 uuid_nodes = dict()
 uuid_connected = dict()
-start_time = time.clock()
-time_limit = 3
+start_time = time.time()
+time_limit = 7
+ka_signal_time = 0
 
 
 def print_lock(message):
@@ -62,7 +63,7 @@ def content_server():
             print("Killing process...\n")
             
 
-    print("Exited")
+    print_lock("Exited")
     s.close()
     sys.exit(0)
 
