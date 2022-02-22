@@ -13,6 +13,7 @@ class CFParser():
         self.name = self.config_file_dict['name']
         self.backend_port = int(self.config_file_dict['backend_port'])
         self.peer_count = int(self.config_file_dict['peer_count'])
+        print(self.config_file_dict)
 
         self.peers = self.get_peers()
     

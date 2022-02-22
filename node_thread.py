@@ -7,7 +7,7 @@ def start_client_server_threads(parser_cf):
 
     #add peers to connected dictionary initially
     for peer_uuid in get_peers_uuids(parser_cf.get_peers()):
-        update_connected_dict(peer_uuid, 0)
+        update_connected_dict([peer_uuid], 0)
 
     #create and start client thread
     client = threading.Thread(target = send_keep_alive_signal, args = (parser_cf, ), daemon = True)
@@ -50,8 +50,11 @@ def server_thread(parser_cf, s):
 
         #accept message
         msg_string = connection_socket.recv(BUFSIZE).decode() #this will be the uuid of peer
+        if msg_string[0:9] == "ka_signal": 
+            msg_string = msg_string[9:].split(":")
 
         #make updates to uuid_connected nodes times
+        #TODO: UNCOMMENT THE NEXT LINE
         threadLock.acquire(); update_connected_dict(msg_string); threadLock.release()
     
         #print("Received message", msg_string)
@@ -65,7 +68,7 @@ def send_keep_alive_signal(parser_cf,):
     
     #constantly send keep_alive_signals
     while True:
-        #threadLock.acquire(); print(cs.uuid_connected); print("still going");threadLock.release()
+        threadLock.acquire(); print(cs.uuid_connected);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -90,15 +93,15 @@ def send_keep_alive_signal(parser_cf,):
                 #print_lock("Disconnected")
                 connected = False
             
-            #send keep alive signal if connected
             if connected:
                 #print_lock("connected successfully")
                 node_uuid = parser_cf.uuid
-
+                #Keep alive signals
                 for _ in range(3): #send 3 signals
-
+                    #print("sending")
                     try:
-                        s.send(node_uuid.encode())
+                        ka_signal = "ka_signal" + node_uuid + ":" + parser_cf.name + ":" + str(parser_cf.backend_port)
+                        s.send(ka_signal.encode())
                         time.sleep(0.01)
                     except:
                         print_lock("Disconnected node")

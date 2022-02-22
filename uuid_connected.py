@@ -6,20 +6,28 @@ Addds uuid to connected_uuid dictionary if not in there
     -uuid: the uuid to possibly be added
     -time: opti
 '''
-def update_connected_dict(uuid, time_entered = -1):
-    if time_entered == -1: cs.uuid_connected[uuid] = time.time() - cs.start_time
-    else: cs.uuid_connected[uuid] = 0
+def update_connected_dict(peer_info, time_entered = -1): #peer_info = [uuid, nodex, port]
+    if time_entered == -1: 
+        peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]
+        cs.uuid_connected[peer_uuid]['time'] = time.time() - cs.start_time
+        cs.uuid_connected[peer_uuid]['name'] = peer_name
+        cs.uuid_connected[peer_uuid]['port'] = peer_port
+
+    else: 
+        peer_uuid = peer_info[0]
+        cs.uuid_connected[peer_uuid] = {'time' : 0}
     return
+
 '''
 Removes a uuid from the connected dictionary if 
 last keep alive signal was received over our time limit.
 '''
 def remove_from_connected_dict():
-    for key, val in list(cs.uuid_connected.items()):
+    for uuid, uuid_info in list(cs.uuid_connected.items()):
         curr_time = time.time() - cs.start_time
-        time_past = curr_time - val
-        if val != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
-            cs.uuid_connected.pop(key, None)
+        time_past = curr_time - uuid_info['time']
+        if uuid_info['time'] != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
+            cs.uuid_connected.pop(uuid, None)
             print("******************************************************\nRemoving %s from dictionary which had time %d and current time is %d" %(key, val, time.time()))
     return
 

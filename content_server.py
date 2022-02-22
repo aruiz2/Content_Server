@@ -1,6 +1,6 @@
 from optparse import OptionParser
 from config_file_parse import CFParser
-from print_uuid import print_uuid
+from print_active_neighbors import *
 import socket, sys, time, threading
 import node_thread as nt
 import build_graph as bg
@@ -47,11 +47,11 @@ def content_server():
     
         elif command == "uuid":
             threadLock.acquire()
-            print_uuid(parser_cf, threadLock)
+            print({"uuid": parser_cf.uuid})
             threadLock.release()
 
         elif command == "neighbors":
-            print("Node neighbors...\n")
+            print_active_neighbors()
 
         elif command == "map":
             print("Graph Map to be printed...\n")
