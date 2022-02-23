@@ -14,7 +14,7 @@ def start_client_server_threads(parser_cf):
     client.start()
 
     #create server socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_ip = socket.gethostbyname(socket.gethostname())
     address = (server_ip, parser_cf.backend_port)
@@ -32,8 +32,8 @@ def start_client_server_threads(parser_cf):
         threadLock.release()
         sys.exit(-1)
 
-    #listen for new connections
-    s.listen()
+    # #listen for new connections
+    # s.listen()
 
     server = threading.Thread(target = server_thread, args = (parser_cf, s), daemon = True)
     server.start()
@@ -45,16 +45,14 @@ def server_thread(parser_cf, s):
         #remove inactive nodes
         threadLock.acquire(); remove_from_connected_dict(); threadLock.release()
 
-        # accept a connection
-        connection_socket, client_address = s.accept()
+        # accept message
+        bytesAddressPair = s.recvfrom(BUFSIZE)
+        msg_string, client_address = bytesAddressPair[0].decode(), bytesAddressPair[1]
 
-        #accept message
-        msg_string = connection_socket.recv(BUFSIZE).decode() #this will be the uuid of peer
         if msg_string[0:9] == "ka_signal": 
             msg_string = msg_string[9:].split(":")
 
         #make updates to uuid_connected nodes times
-        #TODO: UNCOMMENT THE NEXT LINE
         threadLock.acquire(); update_connected_dict(msg_string); threadLock.release()
     
         #print("Received message", msg_string)
@@ -68,10 +66,10 @@ def send_keep_alive_signal(parser_cf,):
     
     #constantly send keep_alive_signals
     while True:
-        #threadLock.acquire(); print(cs.uuid_connected);threadLock.release()
+        threadLock.acquire(); print(cs.uuid_connected);threadLock.release()
 
         #create client socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         #make updates to uuid_connected nodes times
@@ -81,30 +79,20 @@ def send_keep_alive_signal(parser_cf,):
         for peer in peers: #peeer = [uuid, hostname, port, peer_count]
             peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]
             server_ip = socket.gethostbyname(peer_host)
+            server_address = (server_ip, int(peer_port))
             
             #threadLock.acquire(); print("sending to ip", server_ip, "with port", peer_port); threadLock.release()
             
-            #try connecting and sending signal to peer
-            server_address = (server_ip, int(peer_port))
-            connected = True
-            try:
-                s.connect(server_address)
-            except:
-                #print_lock("Disconnected")
-                connected = False
-            
-            if connected:
-                #print_lock("connected successfully")
-                node_uuid = parser_cf.uuid
-                #Keep alive signals
-                for _ in range(3): #send 3 signals
-                    #print("sending")
-                    try:
-                        ka_signal = "ka_signal" + node_uuid + ":" + parser_cf.name + ":" + str(parser_cf.backend_port) + ":" + str(socket.gethostname())
-                        s.send(ka_signal.encode())
-                        time.sleep(0.01)
-                    except:
-                        print_lock("Disconnected node")
+            #Keep alive signals
+            node_uuid = parser_cf.uuid
+            for _ in range(3): #send 3 signals
+                #print("sending")
+                try:
+                    ka_signal = "ka_signal" + node_uuid + ":" + parser_cf.name + ":" + str(parser_cf.backend_port) + ":" + str(socket.gethostname())
+                    s.sendto(ka_signal.encode(), server_address)
+                    time.sleep(0.01)
+                except:
+                    print_lock("Disconnected node")
 
         #update peers variable based on if anyone disconnected
         threadLock.acquire()
