@@ -1,11 +1,13 @@
 from optparse import OptionParser
 from config_file_parse import CFParser
 import socket, sys, time, threading
-import node_thread as nt
 import build_graph as bg
 import add_neighbor as an
+import node_thread as nt
+from uuid_connected_functions import *
+from config_file_parse import get_peers_uuids
 
-global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start
+global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start, threadLock
 BUFSIZE = 1024
 threadLock = threading.Lock()
 graph = dict()
@@ -16,12 +18,24 @@ time_limit = 7
 ka_signal_time = 0
 
 
+'''
+****************************************************************************************************
+****************************************************************************************************
+****************************************************************************************************
+CONTENT SERVER CODE
+****************************************************************************************************
+****************************************************************************************************
+****************************************************************************************************
+'''
+
 def print_lock(message):
     threadLock.acquire()
     print(message)
     threadLock.release()
 
 def content_server():
+    # global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start
+
      #parse the input
     parser_t = OptionParser() 
     parser_t.add_option("-c", dest = "cf_path", help = "Please enter the path to the config file")
@@ -37,7 +51,7 @@ def content_server():
     threadLock.release()
 
     #create threads that acts as server and client for every node
-    nt.start_client_server_threads(parser_cf)
+    nt.start_client_server_threads(parser_cf, uuid_connected, threadLock)
 
     while True:
 
@@ -48,10 +62,14 @@ def content_server():
             print("Adding neighbor...\n")
     
         elif command == "uuid":
-            threadLock.acquire(); print({"uuid": parser_cf.uuid}); threadLock.release()
+            threadLock.acquire()
+            print({"uuid": parser_cf.uuid})
+            threadLock.release()
 
         elif command == "neighbors":
-            threadLock.acquire(); print(uuid_connected);print_active_neighbors(); threadLock.release()
+            threadLock.acquire()
+            print_active_neighbors()
+            threadLock.release()
 
         elif command == "map":
             print("Graph Map to be printed...\n")
@@ -69,23 +87,23 @@ def content_server():
 
 def print_active_neighbors():
     active_neighbors = {"neighbors" : dict()}
-    x = 0
-    print("uuid_conected", uuid_connected)
+
     for peer_uuid, peer_info in uuid_connected.items():
-        x += 1
+        #if time is 0 peer has not connected yet
+        if peer_info['time'] == 0: continue
+
         #Build dictionary of peer
         peer_dict = dict(); 
         peer_dict["port"] = peer_info['port'] 
         peer_dict["host"] = peer_info['host']; peer_dict["uuid"] = peer_uuid
 
-
         #Add peer dict to neighbor dictonary
         peer_name = peer_info['name']
         active_neighbors["neighbors"][peer_name] = peer_dict
     
-    # print(uuid_connected)
-    # print("Amount of times we have been in loop", x)
+
     print(active_neighbors)
+
 
 if __name__ == '__main__':
     content_server()

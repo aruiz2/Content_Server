@@ -1,16 +1,28 @@
 import socket, sys, threading
 from content_server import *
-from uuid_connected import *
+from uuid_connected_functions import *
 from config_file_parse import get_peers_uuids
 
-def start_client_server_threads(parser_cf):
+'''
+****************************************************************************************************
+****************************************************************************************************
+****************************************************************************************************
+THREADING CODE STARTS HERE
+****************************************************************************************************
+****************************************************************************************************
+****************************************************************************************************
+'''
+BUFSIZE = 1024
 
+def start_client_server_threads(parser_cf, uuid_connected, threadLock):
     #add peers to connected dictionary initially
     for peer_uuid in get_peers_uuids(parser_cf.get_peers()):
-        update_connected_dict([peer_uuid], 0)
+        threadLock.acquire()
+        uuid_connected = update_connected_dict([peer_uuid], uuid_connected, 0)
+        threadLock.release()
 
     #create and start client thread
-    client = threading.Thread(target = send_keep_alive_signal, args = (parser_cf, ), daemon = True)
+    client = threading.Thread(target = send_keep_alive_signal, args = (parser_cf, threadLock, uuid_connected), daemon = True)
     client.start()
 
     #create server socket
@@ -35,15 +47,17 @@ def start_client_server_threads(parser_cf):
     # #listen for new connections
     # s.listen()
 
-    server = threading.Thread(target = server_thread, args = (parser_cf, s), daemon = True)
+    server = threading.Thread(target = server_thread, args = (parser_cf, s, uuid_connected, threadLock), daemon = True)
     server.start()
 
-def server_thread(parser_cf, s):
+def server_thread(parser_cf, s, uuid_connected, threadLock):
 
     while True:
 
         #remove inactive nodes
-        threadLock.acquire(); remove_from_connected_dict(); threadLock.release()
+        threadLock.acquire(); 
+        uuid_connected = remove_from_connected_dict(uuid_connected); 
+        threadLock.release()
 
         # accept message
         bytesAddressPair = s.recvfrom(BUFSIZE)
@@ -53,27 +67,31 @@ def server_thread(parser_cf, s):
             msg_string = msg_string[9:].split(":")
 
         #make updates to uuid_connected nodes times
-        threadLock.acquire(); update_connected_dict(msg_string); threadLock.release()
+        threadLock.acquire()
+        uuid_connected = update_connected_dict(msg_string, uuid_connected) 
+        threadLock.release()
     
         #print("Received message", msg_string)
 
     s.close()
 
-def send_keep_alive_signal(parser_cf,):
+def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
 
     #get peers uuids
     peers = parser_cf.get_peers()
     
     #constantly send keep_alive_signals
     while True:
-        #threadLock.acquire(); print(cs.uuid_connected);threadLock.release()
+        #threadLock.acquire(); print(uuid_connected);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
         #make updates to uuid_connected nodes times
-        threadLock.acquire(); remove_from_connected_dict(); threadLock.release()
+        threadLock.acquire()
+        uuid_connected = remove_from_connected_dict(uuid_connected)
+        threadLock.release()
 
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, peer_count]
@@ -96,6 +114,6 @@ def send_keep_alive_signal(parser_cf,):
 
         #update peers variable based on if anyone disconnected
         threadLock.acquire()
-        peers = update_peers(peers)
+        peers = update_peers(peers, uuid_connected)
         threadLock.release()
         s.close()
