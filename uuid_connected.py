@@ -28,7 +28,7 @@ def remove_from_connected_dict():
         time_past = curr_time - uuid_info['time']
         if uuid_info['time'] != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
             cs.uuid_connected.pop(uuid, None)
-            print("******************************************************\nRemoving %s from dictionary which had time %d and current time is %d" %(key, val, time.time()))
+            print("******************************************************\nRemoving %s from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - cs.start_time))
     return
 
 '''
