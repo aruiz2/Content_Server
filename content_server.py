@@ -58,8 +58,7 @@ def content_server():
         #print(uuid_connected)
         command = input()
         if command[:11] == "addneighbor":
-            an.add_neighbor(command[11:])
-            print("Adding neighbor...\n")
+            an.add_neighbor(command[11:], uuid_connected)
     
         elif command == "uuid":
             threadLock.acquire()
