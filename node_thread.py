@@ -78,7 +78,7 @@ def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
     
     #constantly send keep_alive_signals
     while True:
-        #threadLock.acquire(); print(uuid_connected);threadLock.release()
+        threadLock.acquire(); print(uuid_connected);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -108,7 +108,8 @@ def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
                                  str(socket.gethostname()) + ":" +
                                  str(peer_metric))
                     
-                    #threadLock.acquire();print("sending signal to " + node_uuid); threadLock.release()
+                    #threadLock.acquire();print("sending signal to " + peer_uuid); threadLock.release()
+                    #threadLock.acquire();print("sending signal " + ka_signal); threadLock.release()
                     
                     s.sendto(ka_signal.encode(), server_address)
                     time.sleep(0.01)

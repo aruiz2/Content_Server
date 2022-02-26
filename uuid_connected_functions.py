@@ -10,6 +10,7 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1):
     #TODO: ONLY NEED TO UPDATE THE NAME OF THE NODE AND SHOULD SEND LESS DATA IN KEEP ALIVE SIGNALS THEN
     if time_entered == -1: 
         peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
+        #print("\nuuid_connected: ", uuid_connected)
         uuid_connected[peer_uuid]['time'] = time.time() - cs.start_time
         uuid_connected[peer_uuid]['name'] = peer_name
         uuid_connected[peer_uuid]['backend_port'] = peer_port
@@ -19,7 +20,7 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1):
         peer_host = peer_info[1] 
         peer_port = peer_info[2]
         peer_metric = peer_info[3]
-        
+
         uuid_connected[peer_uuid] = {'time' : 0}
         uuid_connected[peer_uuid]['backend_port'] = peer_port
         uuid_connected[peer_uuid]['host'] = peer_host
