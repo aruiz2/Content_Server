@@ -34,7 +34,6 @@ def print_lock(message):
     threadLock.release()
 
 def content_server():
-    # global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start
 
      #parse the input
     parser_t = OptionParser() 
@@ -59,6 +58,7 @@ def content_server():
         command = input()
         if command[:11] == "addneighbor":
             an.add_neighbor(command[11:], uuid_connected)
+            print("now uuid_connected: ", uuid_connected)
     
         elif command == "uuid":
             threadLock.acquire()

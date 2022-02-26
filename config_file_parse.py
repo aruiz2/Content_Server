@@ -13,9 +13,9 @@ class CFParser():
         self.name = self.config_file_dict['name']
         self.backend_port = int(self.config_file_dict['backend_port'])
         self.peer_count = int(self.config_file_dict['peer_count'])
-        print(self.config_file_dict)
 
         self.peers = self.get_peers()
+        
     
     def __remove_whitespace_newline(self, msg):
         new_str = ""
@@ -43,7 +43,6 @@ class CFParser():
             if key == 'backend_port' or key == 'peer_count': cf_dict[key] = int(val)
             else: cf_dict[key] = val
 
-        print(cf_dict)
         return cf_dict
 
 
