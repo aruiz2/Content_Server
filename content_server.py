@@ -93,8 +93,10 @@ def print_active_neighbors():
 
         #Build dictionary of peer
         peer_dict = dict(); 
-        peer_dict["port"] = peer_info['port'] 
-        peer_dict["host"] = peer_info['host']; peer_dict["uuid"] = peer_uuid
+        peer_dict["backend_port"] = peer_info['backend_port'] 
+        peer_dict["host"] = peer_info['host'] 
+        peer_dict["uuid"] = peer_uuid
+        peer_dict["metric"] = peer_info['metric']
 
         #Add peer dict to neighbor dictonary
         peer_name = peer_info['name']

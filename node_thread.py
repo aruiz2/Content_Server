@@ -78,7 +78,7 @@ def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
     
     #constantly send keep_alive_signals
     while True:
-        threadLock.acquire(); print(uuid_connected);threadLock.release()
+        #threadLock.acquire(); print(uuid_connected);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
