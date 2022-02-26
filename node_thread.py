@@ -78,7 +78,7 @@ def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
     
     #constantly send keep_alive_signals
     while True:
-        #threadLock.acquire(); print(uuid_connected);threadLock.release()
+        threadLock.acquire(); print(uuid_connected);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -91,7 +91,7 @@ def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
 
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, count]
-            peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]
+            peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]; peer_metric = peer[3]
             server_ip = socket.gethostbyname(peer_host)
             server_address = (server_ip, int(peer_port))
             
@@ -101,9 +101,14 @@ def send_keep_alive_signal(parser_cf, threadLock, uuid_connected):
             for _ in range(3): #send 3 signals
                 #print("sending")
                 try:
-                    ka_signal = "ka_signal" + node_uuid + ":" + parser_cf.name + ":" + str(parser_cf.backend_port) + ":" + str(socket.gethostname())
+                    ka_signal = ("ka_signal" + 
+                                 node_uuid + ":" + 
+                                 parser_cf.name + ":" + 
+                                 str(parser_cf.backend_port) + ":" + 
+                                 str(socket.gethostname()) + ":" +
+                                 str(peer_metric))
                     
-                    #threadLock.acquire(); print("sending signal to " + node_uuid); threadLock.release()
+                    #threadLock.acquire();print("sending signal to " + node_uuid); threadLock.release()
                     
                     s.sendto(ka_signal.encode(), server_address)
                     time.sleep(0.01)
