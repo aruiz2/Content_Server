@@ -10,10 +10,8 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
     #time = 1 --> keep alive signal
     if time_entered == 1: 
         peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
-        #print("\nuuid_connected: ", uuid_connected)
-        uuid_connected[peer_uuid]['time'] = time.time() - cs.start_time
         uuid_connected[peer_uuid]['name'] = peer_name
-        uuid_connected[peer_uuid]['backend_port'] = peer_port
+        uuid_connected[peer_uuid]['backend_port'] = int(peer_port)
         uuid_connected[peer_uuid]['host'] = peer_host
     
     #time = 2 --> link state advertisement
@@ -23,11 +21,11 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
 
         if received_sequence_number > SEQUENCE_NUMBER:
             #update sequence number
-            uuid_connected['sequence_number'] = curr_sequence_number
+            uuid_connected['sequence_number'] = received_sequence_number
 
             #update metrics of neighbors
             for i in range(1, n_peer_info - 1): #skip first node since its current node uuid
-                peer_uuid = peer_info[0][0]; peer_metric = peer_info[0][1]
+                peer_uuid = peer_info[i][0]; peer_metric = peer_info[i][1]
                 
                 #check peer is not current node
                 if peer_uuid != parser_cf.uuid: uuid_connected[peer_uuid]['metric'] = peer_metric
@@ -40,7 +38,7 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
         peer_metric = peer_info[3]
 
         uuid_connected[peer_uuid] = {'time' : 0}
-        uuid_connected[peer_uuid]['backend_port'] = peer_port
+        uuid_connected[peer_uuid]['backend_port'] = int(peer_port)
         uuid_connected[peer_uuid]['host'] = peer_host
         uuid_connected[peer_uuid]['metric'] = peer_metric
         uuid_connected['sequence_number'] = -1

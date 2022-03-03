@@ -67,7 +67,7 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER):
             threadLock.acquire(); uuid_connected = update_connected_dict(msg_list, uuid_connected, 2, SEQUENCE_NUMBER, parser_cf); threadLock.release()
 
             #TODO: FORWARD SIGNAL TO ALL ITS NEIGHBORS
-            forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf)
+            forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s)
 
         #Keep Alive Signal
         if msg_string[0:9] == "ka_signal": 
@@ -124,6 +124,7 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER):
             for i in range(3):
                 try:
                     link_adv_str = build_link_state_advertisement_str(uuid_connected, SEQUENCE_NUMBER, parser_cf)
+
                     s.sendto(link_adv_str.encode(), server_address)
                     time.sleep(0.01)
                 except:
