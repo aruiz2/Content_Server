@@ -6,15 +6,36 @@ Addds uuid to connected_uuid dictionary if not in there
     -uuid: the uuid to possibly be added
     -time: opti
 '''
-def update_connected_dict(peer_info, uuid_connected, time_entered = -1):
-    #TODO: ONLY NEED TO UPDATE THE NAME OF THE NODE AND SHOULD SEND LESS DATA IN KEEP ALIVE SIGNALS THEN
-    if time_entered == -1: 
+def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE_NUMBER = -1, parser_cf = None):
+    #time = 1 --> keep alive signal
+    if time_entered == 1: 
         peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
         #print("\nuuid_connected: ", uuid_connected)
         uuid_connected[peer_uuid]['time'] = time.time() - cs.start_time
         uuid_connected[peer_uuid]['name'] = peer_name
         uuid_connected[peer_uuid]['backend_port'] = peer_port
         uuid_connected[peer_uuid]['host'] = peer_host
+    
+    #time = 2 --> link state advertisement
+    elif time_entered == 2:
+        n_peer_info = len(peer_info)
+
+        curr_sequence_number = int(peer_info[n_peer_info - 1][0])
+        go_to_for_loop = True
+        if curr_sequence_number < SEQUENCE_NUMBER: go_to_for_loop = False
+
+        if go_to_for_loop:
+            #update sequence number
+            uuid_connected['sequence_number'] = curr_sequence_number
+
+            #update metrics of neighbors
+            for i in range(n_peer_info - 1):
+                peer_uuid = peer_info[0][0]; peer_metric = peer_info[0][1]
+                
+                #check peer is not current node
+                if peer_uuid != parser_cf.uuid: uuid_connected[peer_uuid]['metric'] = peer_metric
+
+    #initialize the uuid_connected        
     else: 
         peer_uuid = peer_info[0] 
         peer_host = peer_info[1] 
@@ -25,6 +46,7 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1):
         uuid_connected[peer_uuid]['backend_port'] = peer_port
         uuid_connected[peer_uuid]['host'] = peer_host
         uuid_connected[peer_uuid]['metric'] = peer_metric
+        uuid_connected['sequence_number'] = -1
     return uuid_connected
 
 '''
@@ -33,11 +55,13 @@ last keep alive signal was received over our time limit.
 '''
 def remove_from_connected_dict(uuid_connected):
     for uuid, uuid_info in list(uuid_connected.items()):
-        curr_time = time.time() - cs.start_time
-        time_past = curr_time - uuid_info['time']
-        if uuid_info['time'] != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
-            uuid_connected.pop(uuid, None)
-            print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - cs.start_time))
+        if uuid != 'sequence_number':
+            
+            curr_time = time.time() - cs.start_time
+            time_past = curr_time - uuid_info['time']
+            if uuid_info['time'] != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
+                uuid_connected.pop(uuid, None)
+                print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - cs.start_time))
     return uuid_connected
 
 '''
@@ -64,7 +88,7 @@ def update_peers(peers, uuid_connected):
 
     for uuid in uuid_connected.keys():
         
-        if uuid not in set_peers_uuids:
+        if uuid != 'sequence_number' and uuid not in set_peers_uuids:
             peer = [uuid, uuid_connected[uuid]['host'], uuid_connected[uuid]['backend_port'], uuid_connected[uuid]['metric']]
             new_peers.append(peer)
 
