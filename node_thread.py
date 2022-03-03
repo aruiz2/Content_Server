@@ -2,6 +2,7 @@ import socket, sys, threading
 from content_server import *
 from uuid_connected_functions import *
 from config_file_parse import get_peers_uuids
+from link_state_advertisement import *
 
 '''
 ****************************************************************************************************
@@ -59,14 +60,16 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER):
         # accept message
         bytesAddressPair = s.recvfrom(BUFSIZE)
         msg_string, client_address = bytesAddressPair[0].decode(), bytesAddressPair[1]
+
+        #Link State Advertisement
         if (msg_string[:7] == "linkadv"): 
-            msg_list = msg_string[7:].split(','); n_msg_list = len(msg_list)
-            for i in range(n_msg_list): 
-                msg_list[i] = msg_list[i].split(':')
-            #our message will be like [[u1, m1], ... , [un, mn], seq_number]
+            msg_list = decode_link_state_advertisement_str(msg_string)
             threadLock.acquire(); uuid_connected = update_connected_dict(msg_list, uuid_connected, 2, SEQUENCE_NUMBER, parser_cf); threadLock.release()
 
+            #TODO: FORWARD SIGNAL TO ALL ITS NEIGHBORS
+            forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf)
 
+        #Keep Alive Signal
         if msg_string[0:9] == "ka_signal": 
             msg_string = msg_string[9:].split(":")
             threadLock.acquire(); uuid_connected = update_connected_dict(msg_string, uuid_connected, 1); threadLock.release()
@@ -120,7 +123,7 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER):
             #Link State Advertisement
             for i in range(3):
                 try:
-                    link_adv_str = build_link_state_advertisement_str(uuid_connected, SEQUENCE_NUMBER)
+                    link_adv_str = build_link_state_advertisement_str(uuid_connected, SEQUENCE_NUMBER, parser_cf)
                     s.sendto(link_adv_str.encode(), server_address)
                     time.sleep(0.01)
                 except:
@@ -133,17 +136,3 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER):
         peers = update_peers(peers, uuid_connected)
         threadLock.release()
         s.close()
-
-def build_link_state_advertisement_str(uuid_connected, SEQUENCE_NUMBER):
-    link_adv = [{}, SEQUENCE_NUMBER]; link_adv_dict = link_adv[0]
-    for nbor_uuid, nbor_dict in uuid_connected.items():
-        if nbor_uuid != 'sequence_number': 
-            link_adv_dict[nbor_uuid] = uuid_connected[nbor_uuid]['metric']
-    
-    #need to convert to string before sending
-    link_adv_str = "linkadv"
-    for nbor, metric in link_adv[0].items():
-        link_adv_str += str(nbor) + ":" + metric
-        link_adv_str += ","
-    link_adv_str += str(SEQUENCE_NUMBER)
-    return link_adv_str

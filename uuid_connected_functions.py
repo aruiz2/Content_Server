@@ -19,17 +19,14 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
     #time = 2 --> link state advertisement
     elif time_entered == 2:
         n_peer_info = len(peer_info)
+        received_sequence_number = int(peer_info[n_peer_info - 1][0])
 
-        curr_sequence_number = int(peer_info[n_peer_info - 1][0])
-        go_to_for_loop = True
-        if curr_sequence_number < SEQUENCE_NUMBER: go_to_for_loop = False
-
-        if go_to_for_loop:
+        if received_sequence_number > SEQUENCE_NUMBER:
             #update sequence number
             uuid_connected['sequence_number'] = curr_sequence_number
 
             #update metrics of neighbors
-            for i in range(n_peer_info - 1):
+            for i in range(1, n_peer_info - 1): #skip first node since its current node uuid
                 peer_uuid = peer_info[0][0]; peer_metric = peer_info[0][1]
                 
                 #check peer is not current node
