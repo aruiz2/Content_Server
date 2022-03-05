@@ -21,7 +21,7 @@ def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, st
     #TODO: add peers data to connected dictionary initially
     for peer in parser_cf.get_peers(): 
         threadLock.acquire()
-        uuid_connected = update_connected_dict(peer, uuid_connected, 0)
+        uuid_connected = update_connected_dict(peer, uuid_connected, start_time, 0)
 
         initial_seq_number = -1
         peer_graph = [[peer[0], int(peer[3])], initial_seq_number]
@@ -71,7 +71,7 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
             msg_list = decode_link_state_advertisement_str(msg_string)
 
             threadLock.acquire(); 
-            uuid_connected = update_connected_dict(msg_list, uuid_connected, 2, SEQUENCE_NUMBER, parser_cf)
+            uuid_connected = update_connected_dict(msg_list, uuid_connected, start_time, 2, SEQUENCE_NUMBER, parser_cf)
             graph = update_graph(graph, msg_list, parser_cf, SEQUENCE_NUMBER)
             threadLock.release()
 
@@ -82,7 +82,7 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
             msg_string = msg_string[9:].split(":")
 
             threadLock.acquire(); 
-            uuid_connected = update_connected_dict(msg_string, uuid_connected, 1); 
+            uuid_connected = update_connected_dict(msg_string, uuid_connected, start_time, 1); 
             threadLock.release()
     s.close()
 
@@ -107,7 +107,7 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
 
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, count]
-            peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]; peer_metric = peer[3]
+            peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]; peer_metric = graph[peer_uuid]
             server_ip = socket.gethostbyname(peer_host)
             server_address = (server_ip, int(peer_port))
             node_uuid = parser_cf.uuid

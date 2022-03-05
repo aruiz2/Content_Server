@@ -2,12 +2,12 @@ import uuid_connected_functions as uc
 import content_server as cs 
 import time
 
-def add_neighbor(input, uuid_connected):
+def add_neighbor(input, uuid_connected, graph):
     #1.Parse Data
     parsed_data = parse_data(input)
 
-    #2. Add to uuid_connected dictionary
-    uuid_connected = neighbor_to_uuid_connected(uuid_connected, parsed_data)
+    #2. Add to uuid_connected dictionary and graph
+    uuid_connected, graph = add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data)
 
 def parse_data(input):
     n_uuid = len("uuid"); n_port = len("backend_port"); n_host = len("host"); n_metric = len("metric")
@@ -34,8 +34,8 @@ def parse_data(input):
     
     return data
 
-#Adds a new neighbor to uuid connected
-def neighbor_to_uuid_connected(uuid_connected, parsed_data):
+
+def add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data):
     #get data needed for neighbor
     uuid_neighbor = parsed_data[0]
     name_neighbor = parsed_data[1] 
@@ -50,4 +50,8 @@ def neighbor_to_uuid_connected(uuid_connected, parsed_data):
     uuid_connected[uuid_neighbor]['backend_port'] = port_neighbor
     uuid_connected[uuid_neighbor]['host'] = host_neighbor
     uuid_connected[uuid_neighbor]['metric'] = metric_neighbor
-    return uuid_connected
+
+    #add neighbor to graph
+    graph[uuid_neighbor] = metric_neighbor
+    
+    return uuid_connected, graph

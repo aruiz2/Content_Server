@@ -5,10 +5,16 @@ Addds uuid to connected_uuid dictionary if not in there
     -uuid: the uuid to possibly be added
     -time: opti
 '''
-def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE_NUMBER = -1, parser_cf = None):
+def update_connected_dict(peer_info, uuid_connected, start_time, time_entered = -1, SEQUENCE_NUMBER = -1, parser_cf = None):
     #time = 1 --> keep alive signal
-    if time_entered == 1: 
+    if time_entered == 1:
         peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
+        
+        #to account for new neighbors added from addneighbor from terminal
+        if peer_uuid not in uuid_connected.keys(): 
+            uuid_connected[peer_uuid] = {'time' : time.time() - start_time}
+        
+        #fill in rest of 
         uuid_connected[peer_uuid]['name'] = peer_name
         uuid_connected[peer_uuid]['backend_port'] = int(peer_port)
         uuid_connected[peer_uuid]['host'] = peer_host
@@ -28,10 +34,11 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
                 
                 #check peer is not current node
                 if peer_uuid != parser_cf.uuid: 
-                    #Only add new peer if it is our neighbor!
+
+                    #Add new peer if neighbor to uuid_connected!
                     if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers :
                         uuid_connected = add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid)
-                        
+
     #initialize the uuid_connected        
     else: 
         peer_uuid = peer_info[0] 
@@ -98,7 +105,7 @@ def update_peers(peers, uuid_connected):
     for uuid in uuid_connected.keys():
         
         if uuid != 'sequence_number' and uuid not in set_peers_uuids:
-            peer = [uuid, uuid_connected[uuid]['host'], uuid_connected[uuid]['backend_port'], uuid_connected[uuid]['metric']]
+            peer = [uuid, uuid_connected[uuid]['host'], uuid_connected[uuid]['backend_port']]
             new_peers.append(peer)
 
     return new_peers
