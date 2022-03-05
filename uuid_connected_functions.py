@@ -16,7 +16,7 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
     #time = 2 --> link state advertisement
     elif time_entered == 2:
         n_peer_info = len(peer_info)
-        received_sequence_number = int(peer_info[n_peer_info - 1][0])
+        received_sequence_number = peer_info[n_peer_info - 1]
 
         if received_sequence_number > SEQUENCE_NUMBER:
             #update sequence number
@@ -92,7 +92,6 @@ def update_peers(peers, uuid_connected):
     #add peers that were not previously connected
 
     #add new peer
-    
     set_peers_uuids = set()
     for peer in peers: uuid = peer[0]; set_peers_uuids.add(uuid)
 

@@ -23,8 +23,9 @@ def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, st
         threadLock.acquire()
         uuid_connected = update_connected_dict(peer, uuid_connected, 0)
 
-        peer_graph = [peer[0], int(peer[3])]
-        graph = update_graph(graph, peer_graph)
+        initial_seq_number = -1
+        peer_graph = [[peer[0], int(peer[3])], initial_seq_number]
+        graph = update_graph(graph, peer_graph, parser_cf)
         threadLock.release()
 
     #create and start client thread
@@ -66,32 +67,23 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
         msg_string, client_address = bytesAddressPair[0].decode(), bytesAddressPair[1]
 
         #Link State Advertisement
-        if (msg_string[:7] == "linkadv"): 
+        if (msg_string[:7] == "linkadv"):
             msg_list = decode_link_state_advertisement_str(msg_string)
-            #TODO: NEED TO UPDATE GRAPH AS WELL AND PLEASE CHANGE LOGIC OF UPDATING UUID CONNECTED
-            #WE DONT WANT TO ADD NODES THAT ARE NOT OUR NEIGHBORS
+
             threadLock.acquire(); 
             uuid_connected = update_connected_dict(msg_list, uuid_connected, 2, SEQUENCE_NUMBER, parser_cf)
-            graph = update_graph(graph, msg_list, SEQUENCE_NUMBER)
+            graph = update_graph(graph, msg_list, parser_cf, SEQUENCE_NUMBER)
             threadLock.release()
+
             forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s)
 
         #Keep Alive Signal
         if msg_string[0:9] == "ka_signal": 
             msg_string = msg_string[9:].split(":")
+
             threadLock.acquire(); 
             uuid_connected = update_connected_dict(msg_string, uuid_connected, 1); 
-
-            #TODO: NEED TO BUILD CORRECT PEER_INFO FOR UPDATE_GRAPH
-
-            print(msg_string)
-
-            #graph = update_graph(graph, peer_info, SEQUENCE_NUMBER)
             threadLock.release()
-
-        
-        #print("Received message", msg_string)
-
     s.close()
 
 def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit):
@@ -101,7 +93,8 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
     
     #constantly send keep_alive_signals
     while True:
-        threadLock.acquire(); print(uuid_connected);threadLock.release()
+        #threadLock.acquire(); print(uuid_connected);threadLock.release()
+        threadLock.acquire(); print(graph);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
