@@ -1,4 +1,3 @@
-import content_server as cs
 import time
 
 '''
@@ -28,8 +27,11 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
                 peer_uuid = peer_info[i][0]; peer_metric = peer_info[i][1]
                 
                 #check peer is not current node
-                if peer_uuid != parser_cf.uuid: uuid_connected[peer_uuid]['metric'] = peer_metric
-
+                if peer_uuid != parser_cf.uuid: 
+                    #Only add new peer if it is our neighbor!
+                    if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers :
+                        uuid_connected = add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid)
+                        
     #initialize the uuid_connected        
     else: 
         peer_uuid = peer_info[0] 
@@ -40,23 +42,36 @@ def update_connected_dict(peer_info, uuid_connected, time_entered = -1, SEQUENCE
         uuid_connected[peer_uuid] = {'time' : 0}
         uuid_connected[peer_uuid]['backend_port'] = int(peer_port)
         uuid_connected[peer_uuid]['host'] = peer_host
-        uuid_connected[peer_uuid]['metric'] = peer_metric
         uuid_connected['sequence_number'] = -1
     return uuid_connected
+
+'''
+Adds a neighbor data to uuid_connected if received from a link advertisement
+'''
+def add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid):
+    node_peers = parser_cf.get_peers()
+    for peer_data in node_peers:
+        if peer[0] == peer_uuid:
+            uuid_connected[peer_uuid] = {'uuid': peer_uuid, 
+                                        'host': peer[1], 
+                                        'backend_port': peer[2], 
+                                        'time': '0'}
+            return uuid_connected
+    return None
 
 '''
 Removes a uuid from the connected dictionary if 
 last keep alive signal was received over our time limit.
 '''
-def remove_from_connected_dict(uuid_connected):
+def remove_from_connected_dict(uuid_connected, start_time, time_limit):
     for uuid, uuid_info in list(uuid_connected.items()):
         if uuid != 'sequence_number':
             
-            curr_time = time.time() - cs.start_time
+            curr_time = time.time() - start_time
             time_past = curr_time - uuid_info['time']
-            if uuid_info['time'] != 0 and time_past > cs.time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
+            if uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
                 uuid_connected.pop(uuid, None)
-                print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - cs.start_time))
+                print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - start_time))
     return uuid_connected
 
 '''

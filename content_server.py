@@ -1,16 +1,13 @@
 from optparse import OptionParser
 from config_file_parse import CFParser
 import socket, sys, time, threading
-import build_graph as bg
-import add_neighbor as an
-import node_thread as nt
-from uuid_connected_functions import *
-from config_file_parse import get_peers_uuids
+from build_graph import *
+from add_neighbor import *
+from node_thread import *
 
 global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start, threadLock
 BUFSIZE = 1024
 threadLock = threading.Lock()
-graph = dict()
 uuid_nodes = dict()
 uuid_connected = dict()
 start_time = time.time()
@@ -35,7 +32,7 @@ def print_lock(message):
 
 def content_server():
 
-     #parse the input
+    #parse the input
     parser_t = OptionParser() 
     parser_t.add_option("-c", dest = "cf_path", help = "Please enter the path to the config file")
     (options, args) = parser_t.parse_args()
@@ -45,19 +42,19 @@ def content_server():
 
     #add node to graph and uuid variables
     threadLock.acquire()
-    bg.add_node_and_peers_to_graph(parser_cf)
+    graph = add_node_and_peers_to_graph(parser_cf, dict())
     uuid_nodes[parser_cf.uuid] = parser_cf.name
     threadLock.release()
 
     #create threads that acts as server and client for every node
-    nt.start_client_server_threads(parser_cf, uuid_connected, threadLock)
+    start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit)
 
     while True:
 
         #print(uuid_connected)
         command = input()
         if command[:11] == "addneighbor":
-            an.add_neighbor(command[11:], uuid_connected)
+            add_neighbor(command[11:], uuid_connected)
             print("now uuid_connected: ", uuid_connected)
     
         elif command == "uuid":

@@ -10,16 +10,15 @@ def decode_link_state_advertisement_str(msg_string):
 '''
 Builds Link State Advertisement string to be sent based on current data
 '''
-def build_link_state_advertisement_str(uuid_connected, SEQUENCE_NUMBER, parser_cf):
+def build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf):
     link_adv = [{}, SEQUENCE_NUMBER]; link_adv_dict = link_adv[0]
-    for nbor_uuid, nbor_dict in uuid_connected.items():
-        if nbor_uuid != 'sequence_number': 
-            link_adv_dict[nbor_uuid] = uuid_connected[nbor_uuid]['metric']
+    for nbor_uuid, nbor_metric in graph.items():
+        link_adv_dict[nbor_uuid] = nbor_metric
     
     #need to convert to string before sending
     link_adv_str = "linkadv:" + parser_cf.uuid + ","
-    for nbor, metric in link_adv[0].items():
-        link_adv_str += str(nbor) + ":" + metric
+    for nbor, metric in link_adv_dict.items():
+        link_adv_str += str(nbor) + ":" + str(metric)
         link_adv_str += ","
     link_adv_str += str(SEQUENCE_NUMBER)
     return link_adv_str
@@ -57,4 +56,3 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
 
         #connect to neighbor
         s.sendto(msg_str.encode(), server_address)
-        print("Successfully forwarded link advertisement to ", nbor_uuid)
