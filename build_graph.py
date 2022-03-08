@@ -26,13 +26,13 @@ def update_graph(graph, peer_info, parser_cf, SEQUENCE_NUMBER = -1):
 
     if sender_seq_num > graph[sender_uuid]['sequence_number']:
         graph[sender_uuid]['sequence_number'] = sender_seq_num
-        
+
         for node_uuid, node_data in peer_info.items():
             if is_valid_node_uuid(node_uuid):
-                if node_uuid not in graph.keys(): graph[node_uuid] = dict()
+                if node_uuid not in graph.keys(): graph[node_uuid] = {'sequence_number':-1}
 
                 for peer_uuid, peer_metric in node_data.items():
-                    if peer_uuid not in graph.keys(): graph[peer_uuid] = dict()
+                    if peer_uuid not in graph.keys(): graph[peer_uuid] = {'sequence_number':-1}
                     graph[node_uuid][peer_uuid] = peer_metric
                     graph[peer_uuid][node_uuid] = peer_metric
         forward = True
