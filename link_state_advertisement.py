@@ -1,60 +1,66 @@
 import socket
+import json
 '''
 Decodes Link State Advertisement String to a list format
 '''
 def decode_link_state_advertisement_str(msg_string):
-    msg_list = msg_string[8:].split(','); n_msg_list = len(msg_list)
-    for i in range(n_msg_list): 
-        msg_list[i] = msg_list[i].split(':')
-    msg_list[n_msg_list - 1] = int(msg_list[n_msg_list-1][0])
-    return msg_list
+    return json.loads(msg_string)
+    
 '''
 Builds Link State Advertisement string to be sent based on current data
 '''
 def build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf):
-    link_adv = [{}, SEQUENCE_NUMBER]; link_adv_dict = link_adv[0]
-    for nbor_uuid, nbor_metric in graph.items():
-        link_adv_dict[nbor_uuid] = nbor_metric
+    #Set Up Initial data for msg
+    msg = dict()
+    msg['original_sender'] = parser_cf.uuid
+    msg['sequence_number'] = SEQUENCE_NUMBER
+    msg['current_sender'] = parser_cf.uuid
+
+    #Initialize empty dictonaries
+    for node_uuid in graph.keys(): msg[node_uuid] = dict()
+
+    #Set up metrics data for msg
+    for node_uuid in graph.keys():
+        for peer_uuid, metric in graph[node_uuid].items():
+            if peer_uuid != 'sequence_number':
+                msg[node_uuid][peer_uuid] = metric
+                msg[peer_uuid][node_uuid] = metric
     
-    #need to convert to string before sending
-    link_adv_str = "linkadv:" + parser_cf.uuid + ","
-    for nbor, metric in link_adv_dict.items():
-        if nbor != 'sequence_number':
-            link_adv_str += str(nbor) + ":" + str(metric)
-            link_adv_str += ","
-    link_adv_str += str(SEQUENCE_NUMBER)
-    return link_adv_str
+    return json.dumps(msg)
 
 '''
 Forwards Link State Advertisement to neighbors
 '''
-def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s):
-    #msg_list = [[n1, m1], [n2, m2], ... , [metric]]
-    n_msg_list = len(msg_list)
-    received_sequence_number = msg_list[n_msg_list - 1]; curr_sequence_number = uuid_connected['sequence_number']
-    node_received_adv_from = msg_list[0][0]
+def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s, graph):
     neighbors_to_forward_adv = []
+    link_adv_sender_uuid = msg_list['current_sender']
 
-    #get list of neighbors to which forward the link advertisement to
-    if received_sequence_number > curr_sequence_number:
-        #dont forward to neighbor we received info from, avoid loops
-        for nbor in uuid_connected.keys():
-            if nbor != node_received_adv_from and nbor != 'sequence_number': 
-                neighbors_to_forward_adv.append(nbor)
+    #dont forward to the neighbor we received message from
+    for nbor_uuid in uuid_connected.keys():
+        if nbor_uuid != link_adv_sender_uuid:
+            neighbors_to_forward_adv.append(nbor_uuid)
+
+    original_sender_uuid = msg_list['original_sender']; original_sender_seq_num = msg_list['sequence_number']
+
+    #rebuild the message to be sent
+    msg = dict()
+    msg['original_sender'] = original_sender_uuid
+    msg['sequence_number'] = original_sender_seq_num
+    msg['current_sender'] = parser_cf.uuid
+    for node_uuid in graph.keys(): msg[node_uuid] = dict()
+    for node_uuid in graph.keys():
+        for peer_uuid, metric in graph[node_uuid].items():
+            if peer_uuid != 'sequence_number':
+                msg[node_uuid][peer_uuid] = metric
+                msg[peer_uuid][node_uuid] = metric
+    msg = json.dumps(msg)
 
     #forward the link advertisement to each neighbor
     for nbor_uuid in neighbors_to_forward_adv:
-        #get nbor data for socket
-        nbor_host = uuid_connected[nbor_uuid]['host']; nbor_port = uuid_connected[nbor_uuid]['backend_port']
-        server_ip = socket.gethostbyname(nbor_host)
-        server_address = (server_ip, nbor_port)
+        #get nbor data
+        nbor_host = uuid_connected[nbor_uuid]['host']; 
+        nbor_port = uuid_connected[nbor_uuid]['backend_port']; 
 
-        #rebuild the message to be sent
-        msg_str = "linkadv:" + parser_cf.uuid + ","
-        for nbor, metric in msg_list[1:n_msg_list-1]:
-            msg_str += str(nbor) + ":" + metric
-            msg_str += ","
-        msg_str += str(received_sequence_number)
-
-        #connect to neighbor
-        s.sendto(msg_str.encode(), server_address)
+        #connect to neighbor and send message
+        server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
+        s.sendto(msg.encode(), server_address)

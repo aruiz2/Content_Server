@@ -52,6 +52,7 @@ def add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data):
     uuid_connected[uuid_neighbor]['metric'] = metric_neighbor
 
     #add neighbor to graph
-    graph[uuid_neighbor] = metric_neighbor
+    graph[uuid_neighbor]['metric'] = metric_neighbor
+    graph[uuid_neighbor]['sequence_number'] = -1
     
     return uuid_connected, graph

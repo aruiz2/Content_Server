@@ -17,16 +17,15 @@ THREADING CODE STARTS HERE
 BUFSIZE = 1024
 
 def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit):
-
-    #TODO: add peers data to connected dictionary initially
-    for peer in parser_cf.get_peers(): 
-        threadLock.acquire()
-        uuid_connected = update_connected_dict(peer, uuid_connected, start_time, 0)
-
-        initial_seq_number = -1
-        peer_graph = [[peer[0], int(peer[3])], initial_seq_number]
-        graph = update_graph(graph, peer_graph, parser_cf)
-        threadLock.release()
+    initial_seq_number = -1
+    threadLock.acquire()
+    #initialize uuid_connected
+    for peer in parser_cf.get_peers():
+        uuid_connected = update_connected_dict(peer, uuid_connected, start_time, graph, 0)
+    
+    #initialize graph
+    graph = add_node_and_peers_to_graph(parser_cf, graph)
+    threadLock.release()
 
     #create and start client thread
     SEQUENCE_NUMBER = 0
@@ -65,25 +64,26 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
         # accept message
         bytesAddressPair = s.recvfrom(BUFSIZE)
         msg_string, client_address = bytesAddressPair[0].decode(), bytesAddressPair[1]
-
-        #Link State Advertisement
-        if (msg_string[:7] == "linkadv"):
-            msg_list = decode_link_state_advertisement_str(msg_string)
-
-            threadLock.acquire(); 
-            uuid_connected = update_connected_dict(msg_list, uuid_connected, start_time, 2, SEQUENCE_NUMBER, parser_cf)
-            graph = update_graph(graph, msg_list, parser_cf, SEQUENCE_NUMBER)
-            threadLock.release()
-
-            forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s)
-
+        
         #Keep Alive Signal
         if msg_string[0:9] == "ka_signal": 
             msg_string = msg_string[9:].split(":")
 
             threadLock.acquire(); 
-            uuid_connected = update_connected_dict(msg_string, uuid_connected, start_time, 1); 
+            uuid_connected = update_connected_dict(msg_string, uuid_connected, start_time, graph, 1); 
             threadLock.release()
+
+        #Link State Advertisement
+        else:
+            msg_list = decode_link_state_advertisement_str(msg_string)
+
+            threadLock.acquire(); 
+            uuid_connected = update_connected_dict(msg_list, uuid_connected, start_time, graph,  2, SEQUENCE_NUMBER, parser_cf)
+            graph, forward = update_graph(graph, msg_list, parser_cf, SEQUENCE_NUMBER)
+            threadLock.release()
+
+            if (forward): forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s, graph)
+
     s.close()
 
 def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit):
@@ -112,12 +112,17 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
             server_address = (server_ip, int(peer_port))
             node_uuid = parser_cf.uuid
 
+            #Send the data
+            threadLock.acquire()
+
             #Keep alive signals
             send_keep_alive_signals(s, server_address, node_uuid, parser_cf, peer_metric)
 
             #Link State Advertisement
             send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUMBER, parser_cf)
+            
             SEQUENCE_NUMBER += 1
+            threadLock.release()
         
         #threadLock.acquire(); print("\n"); threadLock.release()
 
@@ -148,7 +153,6 @@ def send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUM
     for i in range(3):
         try:
             link_adv_str = build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf)
-
             s.sendto(link_adv_str.encode(), server_address)
             time.sleep(0.01)
             #print("Link Advertisement")
