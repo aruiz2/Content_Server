@@ -2,12 +2,12 @@ import uuid_connected_functions as uc
 import content_server as cs 
 import time
 
-def add_neighbor(input, uuid_connected, graph):
+def add_neighbor(input, uuid_connected, graph, parser_cf):
     #1.Parse Data
     parsed_data = parse_data(input)
 
     #2. Add to uuid_connected dictionary and graph
-    uuid_connected, graph = add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data)
+    uuid_connected, graph = add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data, parser_cf)
 
 def parse_data(input):
     n_uuid = len("uuid"); n_port = len("backend_port"); n_host = len("host"); n_metric = len("metric")
@@ -33,10 +33,10 @@ def parse_data(input):
             data[4] = metric
     
     return data
+    
 
-
-def add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data):
-    #get data needed for neighbor
+def add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data, parser_cf):
+    #get data needed or neighbor
     uuid_neighbor = parsed_data[0]
     name_neighbor = parsed_data[1] 
     port_neighbor = parsed_data[2] 
@@ -52,7 +52,7 @@ def add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data):
     uuid_connected[uuid_neighbor]['metric'] = metric_neighbor
 
     #add neighbor to graph
-    graph[uuid_neighbor]['metric'] = metric_neighbor
-    graph[uuid_neighbor]['sequence_number'] = -1
-    
+    graph[uuid_neighbor] = {'sequence_number':-1}
+    graph[uuid_neighbor][parser_cf.uuid] = metric_neighbor
+
     return uuid_connected, graph

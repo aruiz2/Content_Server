@@ -82,7 +82,8 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
             graph, forward = update_graph(graph, msg_list, parser_cf, SEQUENCE_NUMBER)
             threadLock.release()
 
-            if (forward): forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s, graph)
+            if (forward): 
+                uuid_connected = forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s, graph)
 
     s.close()
 

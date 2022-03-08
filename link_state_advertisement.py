@@ -34,13 +34,21 @@ Forwards Link State Advertisement to neighbors
 def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf, s, graph):
     neighbors_to_forward_adv = []
     link_adv_sender_uuid = msg_list['current_sender']
+    original_sender_uuid = msg_list['original_sender']
+    original_sender_seq_num = msg_list['sequence_number']
+
+    #Edge Case: Check that we have a new neighbor (could be added from terminal)
+    if (link_adv_sender_uuid == original_sender_uuid and 
+        link_adv_sender_uuid not in uuid_connected.keys()):
+        uuid_connected[original_sender_uuid] = {'uuid':original_sender_uuid,
+                                                'host': '',
+                                                'backend_port': -1,
+                                                'time': 0}
 
     #dont forward to the neighbor we received message from
     for nbor_uuid in uuid_connected.keys():
         if nbor_uuid != link_adv_sender_uuid:
             neighbors_to_forward_adv.append(nbor_uuid)
-
-    original_sender_uuid = msg_list['original_sender']; original_sender_seq_num = msg_list['sequence_number']
 
     #rebuild the message to be sent
     msg = dict()
@@ -59,8 +67,10 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
     for nbor_uuid in neighbors_to_forward_adv:
         #get nbor data
         nbor_host = uuid_connected[nbor_uuid]['host']; 
-        nbor_port = uuid_connected[nbor_uuid]['backend_port']; 
+        nbor_port = int(uuid_connected[nbor_uuid]['backend_port']); 
 
         #connect to neighbor and send message
         server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
         s.sendto(msg.encode(), server_address)
+    
+    return uuid_connected

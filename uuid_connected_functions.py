@@ -21,9 +21,17 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
     
     #time = 2 --> link state advertisement
     elif time_entered == 2:
-        n_peer_info = len(peer_info)
         original_sender_uuid = peer_info["original_sender"]; received_sequence_number = peer_info['sequence_number']
 
+        #Check if current sender is a new neigbor that was added to add to uuid_connected
+        current_sender_uuid = peer_info["current_sender"]
+        if current_sender_uuid == original_sender_uuid and current_sender_uuid not in uuid_connected.keys(): 
+            uuid_connected[current_sender_uuid] = {'sequence_number':-1}
+        
+
+        #Check if original sender is in the graph, if not add it to the graph
+        if original_sender_uuid not in graph.keys():
+            graph[original_sender_uuid] = {'sequence_number':-1}
 
         if received_sequence_number > graph[original_sender_uuid]['sequence_number']:
 
@@ -60,8 +68,8 @@ def add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid):
         if peer[0] == peer_uuid:
             uuid_connected[peer_uuid] = {'uuid': peer_uuid, 
                                         'host': peer[1], 
-                                        'backend_port': peer[2], 
-                                        'time': '0'}
+                                        'backend_port': int(peer[2]), 
+                                        'time': 0}
             return uuid_connected
     return None
 
@@ -97,7 +105,9 @@ def update_peers(peers, uuid_connected):
 
     #add new peer
     set_peers_uuids = set()
-    for peer in peers: uuid = peer[0]; set_peers_uuids.add(uuid)
+    for peer in peers: 
+        uuid = peer[0]
+        set_peers_uuids.add(uuid)
 
     for uuid in uuid_connected.keys():
         

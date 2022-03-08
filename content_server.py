@@ -54,7 +54,7 @@ def content_server():
         #print(uuid_connected)
         command = input()
         if command[:11] == "addneighbor":
-            add_neighbor(command[11:], uuid_connected, graph)
+            add_neighbor(command[11:], uuid_connected, graph, parser_cf)
             print("now uuid_connected: ", uuid_connected)
     
         elif command == "uuid":
