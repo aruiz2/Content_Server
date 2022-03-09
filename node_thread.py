@@ -94,8 +94,8 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
     
     #constantly send keep_alive_signals
     while True:
-        #threadLock.acquire(); print(uuid_connected);threadLock.release()
-        threadLock.acquire(); print(graph);threadLock.release()
+        threadLock.acquire(); print(uuid_connected);threadLock.release()
+        #threadLock.acquire(); print(graph);threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -111,13 +111,12 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
             peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]; peer_metric = graph[peer_uuid]
             server_ip = socket.gethostbyname(peer_host)
             server_address = (server_ip, int(peer_port))
-            node_uuid = parser_cf.uuid
 
             #Send the data
             threadLock.acquire()
 
             #Keep alive signals
-            send_keep_alive_signals(s, server_address, node_uuid, parser_cf, peer_metric)
+            send_keep_alive_signals(s, server_address, parser_cf, peer_metric)
 
             #Link State Advertisement
             send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUMBER, parser_cf)
@@ -130,14 +129,15 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
         #update peers variable based on if anyone disconnected
         threadLock.acquire()
         peers = update_peers(peers, uuid_connected)
+        print("peers:", peers)
         threadLock.release()
         s.close()
 
-def send_keep_alive_signals(s, server_address, node_uuid, parser_cf, peer_metric):
+def send_keep_alive_signals(s, server_address, parser_cf, peer_metric):
     for _ in range(3):
         try:
             ka_signal = ("ka_signal" + 
-                            node_uuid + ":" + 
+                            parser_cf.uuid + ":" + 
                             parser_cf.name + ":" + 
                             str(parser_cf.backend_port) + ":" + 
                             str(socket.gethostname()) + ":" +

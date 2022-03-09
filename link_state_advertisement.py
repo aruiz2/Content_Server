@@ -17,14 +17,19 @@ def build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf):
     msg['current_sender'] = parser_cf.uuid
 
     #Initialize empty dictonaries
-    for node_uuid in graph.keys(): msg[node_uuid] = dict()
+    for node_uuid in graph.keys(): 
+        if node_uuid != parser_cf.uuid: msg[node_uuid] = dict()
 
     #Set up metrics data for msg
     for node_uuid in graph.keys():
         for peer_uuid, metric in graph[node_uuid].items():
             if peer_uuid != 'sequence_number':
-                msg[node_uuid][peer_uuid] = metric
-                msg[peer_uuid][node_uuid] = metric
+
+                if node_uuid != parser_cf.uuid:
+                    msg[node_uuid][peer_uuid] = metric
+
+                if peer_uuid != parser_cf.uuid:
+                    msg[peer_uuid][node_uuid] = metric
     
     return json.dumps(msg)
 
@@ -59,8 +64,12 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
     for node_uuid in graph.keys():
         for peer_uuid, metric in graph[node_uuid].items():
             if peer_uuid != 'sequence_number':
-                msg[node_uuid][peer_uuid] = metric
-                msg[peer_uuid][node_uuid] = metric
+
+                if node_uuid != parser_cf.uuid:
+                    msg[node_uuid][peer_uuid] = metric
+
+                if peer_uuid != parser_cf.uuid:
+                    msg[peer_uuid][node_uuid] = metric
     msg = json.dumps(msg)
 
     #forward the link advertisement to each neighbor

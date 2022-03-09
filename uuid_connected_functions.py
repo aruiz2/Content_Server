@@ -12,13 +12,14 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
         
         #to account for new neighbors added from addneighbor from terminal
         if peer_uuid not in uuid_connected.keys(): 
-            uuid_connected[peer_uuid] = {'time' : time.time() - start_time}
+            uuid_connected[peer_uuid] = {'time':time.time() - start_time}
         
-        #fill in rest of 
+        #fill in rest of information
         uuid_connected[peer_uuid]['name'] = peer_name
         uuid_connected[peer_uuid]['backend_port'] = int(peer_port)
         uuid_connected[peer_uuid]['host'] = peer_host
-    
+        uuid_connected[peer_uuid]['time'] = time.time() - start_time
+        
     #time = 2 --> link state advertisement
     elif time_entered == 2:
         original_sender_uuid = peer_info["original_sender"]; received_sequence_number = peer_info['sequence_number']
@@ -26,8 +27,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
         #Check if current sender is a new neigbor that was added to add to uuid_connected
         current_sender_uuid = peer_info["current_sender"]
         if current_sender_uuid == original_sender_uuid and current_sender_uuid not in uuid_connected.keys(): 
-            uuid_connected[current_sender_uuid] = {'sequence_number':-1}
-        
+            uuid_connected[current_sender_uuid] = {'sequence_number':-1, 'time': time.time() - start_time}
 
         #Check if original sender is in the graph, if not add it to the graph
         if original_sender_uuid not in graph.keys():
@@ -105,7 +105,7 @@ def update_peers(peers, uuid_connected):
 
     #add new peer
     set_peers_uuids = set()
-    for peer in peers: 
+    for peer in new_peers: 
         uuid = peer[0]
         set_peers_uuids.add(uuid)
 
@@ -113,6 +113,7 @@ def update_peers(peers, uuid_connected):
         
         if uuid not in set_peers_uuids:
             peer = [uuid, uuid_connected[uuid]['host'], uuid_connected[uuid]['backend_port']]
+            print("peer: ", peer)
             new_peers.append(peer)
 
     return new_peers
