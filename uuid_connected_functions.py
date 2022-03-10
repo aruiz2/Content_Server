@@ -1,4 +1,5 @@
 import time
+from build_graph import *
 
 '''
 Addds uuid to connected_uuid dictionary if not in there
@@ -77,14 +78,17 @@ def add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid):
 Removes a uuid from the connected dictionary if 
 last keep alive signal was received over our time limit.
 '''
-def remove_from_connected_dict(uuid_connected, start_time, time_limit):
+def remove_from_connected_dict(uuid_connected, start_time, time_limit, graph):
+    node_uuids_removed = []
     for uuid, uuid_info in list(uuid_connected.items()):
         curr_time = time.time() - start_time
         time_past = curr_time - uuid_info['time']
         if uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
             uuid_connected.pop(uuid, None)
+            graph, removed = remove_from_graph([uuid], graph)
             print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - start_time))
-    return uuid_connected
+            node_uuids_removed.append(uuid)
+    return uuid_connected, node_uuids_removed, graph
 
 '''
 This function upadtes the peers of a node at the end

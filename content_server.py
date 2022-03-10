@@ -111,9 +111,10 @@ def print_map(graph, parser_cf, nodes_names):
 
 
     #Initialize empty dictionaries for all nodes
-    for node_uuid, node_data in nodes_names.items(): 
-        node_name = parser_cf.name if node_uuid == parser_cf.uuid else nodes_names[node_uuid]
-        map["map"][node_name] = {}
+    for node_uuid, node_data in nodes_names.items():
+        if node_uuid in graph.keys() or node_uuid == parser_cf.uuid: 
+            node_name = parser_cf.name if node_uuid == parser_cf.uuid else nodes_names[node_uuid]
+            map["map"][node_name] = {}
 
     #Fill in the data
     for node_uuid, node_data in graph.items():

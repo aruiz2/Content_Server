@@ -39,5 +39,21 @@ def update_graph(graph, peer_info, parser_cf, uuid_connected, SEQUENCE_NUMBER = 
 
     return graph, forward
 
+def remove_from_graph(rem_uuids, graph):
+    removed = False
+    for rem_uuid in rem_uuids:
+        if rem_uuid != '':
+            for node_uuid, node_uuid_dict in list(graph.items()):
+                print(node_uuid, node_uuid_dict)
+                if node_uuid == rem_uuid: 
+                    graph.pop(node_uuid, None)
+                    removed = True
+                elif rem_uuid in node_uuid_dict.keys():
+                    node_uuid_dict.pop(rem_uuid, None)
+                    graph[node_uuid] = node_uuid_dict
+                    removed = True
+        
+    return graph, removed
+
 def is_valid_node_uuid(node_uuid):
     return node_uuid != "original_sender" and node_uuid != "sequence_number" and node_uuid != "current_sender"
