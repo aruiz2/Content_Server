@@ -5,7 +5,7 @@ from build_graph import *
 from add_neighbor import *
 from node_thread import *
 
-global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start, threadLock
+global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start, threadLock, all_info
 BUFSIZE = 1024
 threadLock = threading.Lock()
 uuid_nodes = dict()
@@ -40,6 +40,9 @@ def content_server():
     #parse the config file
     parser_cf = CFParser(options.cf_path)
 
+    #initialize nodes_names dict
+    nodes_names = {parser_cf.uuid:parser_cf.name}
+    
     #add node to graph and uuid variables
     threadLock.acquire()
     graph = add_node_and_peers_to_graph(parser_cf, dict())
@@ -47,7 +50,7 @@ def content_server():
     threadLock.release()
 
     #create threads that acts as server and client for every node
-    start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit)
+    start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit, nodes_names)
 
     while True:
 
@@ -68,7 +71,7 @@ def content_server():
             threadLock.release()
 
         elif command == "map":
-            print("Graph Map to be printed...\n")
+            print_map(graph, parser_cf, nodes_names)
 
         elif command == "rank":
             print("Print Djikstra's distances...\n")
@@ -99,9 +102,31 @@ def print_active_neighbors():
         peer_name = peer_info['name']
         active_neighbors["neighbors"][peer_name] = peer_dict
     
-
     print(active_neighbors)
 
+
+def print_map(graph, parser_cf, nodes_names):
+    map = {"map":{}}
+    node_name = None; peer_name = None
+
+
+    #Initialize empty dictionaries for all nodes
+    for node_uuid, node_data in nodes_names.items(): 
+        node_name = parser_cf.name if node_uuid == parser_cf.uuid else nodes_names[node_uuid]
+        map["map"][node_name] = {}
+
+    #Fill in the data
+    for node_uuid, node_data in graph.items():
+        if node_uuid in nodes_names.keys():
+            node_name = parser_cf.name if node_uuid == parser_cf.uuid else nodes_names[node_uuid]
+
+            for peer_uuid, metric in node_data.items():
+                if peer_uuid != "sequence_number" and peer_uuid in nodes_names.keys():
+                    peer_name = parser_cf.name if peer_uuid == parser_cf.uuid else nodes_names[peer_uuid]
+                    
+                    map["map"][node_name][peer_name] = metric
+                    map["map"][peer_name][node_name] = metric
+    print(map)
 
 if __name__ == '__main__':
     content_server()

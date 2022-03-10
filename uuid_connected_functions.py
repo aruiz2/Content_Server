@@ -5,7 +5,7 @@ Addds uuid to connected_uuid dictionary if not in there
     -uuid: the uuid to possibly be added
     -time: opti
 '''
-def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_entered = -1, SEQUENCE_NUMBER = -1, parser_cf = None):
+def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_entered = -1, SEQUENCE_NUMBER = -1, parser_cf = None,):
     #time = 1 --> keep alive signal
     if time_entered == 1:
         peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
@@ -28,7 +28,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
         current_sender_uuid = peer_info["current_sender"]
         if current_sender_uuid == original_sender_uuid and current_sender_uuid not in uuid_connected.keys(): 
             uuid_connected[current_sender_uuid] = {'sequence_number':-1, 'time': time.time() - start_time}
-
+        
         #Check if original sender is in the graph, if not add it to the graph
         if original_sender_uuid not in graph.keys():
             graph[original_sender_uuid] = {'sequence_number':-1}
@@ -46,7 +46,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
                             #Add new peer if neighbor to uuid_connected!
                             if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers :
                                 uuid_connected = add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid)
-
+                        
     #initialize the uuid_connected        
     else: 
         peer_uuid = peer_info[0] 

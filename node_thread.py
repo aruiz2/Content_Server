@@ -4,6 +4,7 @@ from uuid_connected_functions import *
 from config_file_parse import get_peers_uuids
 from link_state_advertisement import *
 from build_graph import *
+from nodes_names_functions import *
 
 '''
 ****************************************************************************************************
@@ -16,7 +17,7 @@ THREADING CODE STARTS HERE
 '''
 BUFSIZE = 1024
 
-def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit):
+def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit, nodes_names):
     initial_seq_number = -1
     threadLock.acquire()
     #initialize uuid_connected
@@ -29,7 +30,7 @@ def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, st
 
     #create and start client thread
     SEQUENCE_NUMBER = 0
-    client = threading.Thread(target = send_data, args = (parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit), daemon = True)
+    client = threading.Thread(target = send_data, args = (parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit, nodes_names), daemon = True)
     client.start()
 
     #create server socket
@@ -49,10 +50,10 @@ def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, st
         sys.exit(-1)
 
     #start the server
-    server = threading.Thread(target = server_thread, args = (parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, graph, start_time, time_limit), daemon = True)
+    server = threading.Thread(target = server_thread, args = (parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, graph, start_time, time_limit, nodes_names), daemon = True)
     server.start()
 
-def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, graph, start_time, time_limit):
+def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, graph, start_time, time_limit, nodes_names):
 
     while True:
 
@@ -73,13 +74,21 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
             uuid_connected = update_connected_dict(msg_string, uuid_connected, start_time, graph, 1); 
             threadLock.release()
 
+        #Nodes Names Signal
+        elif msg_string[0:11] == "nodes_names":
+            msg_string = msg_string[12:].split(',')
+            
+            threadLock.acquire()
+            nodes_names = update_nodes_names(msg_string, nodes_names)
+            threadLock.release()
+
         #Link State Advertisement
         else:
             msg_list = decode_link_state_advertisement_str(msg_string)
 
             threadLock.acquire(); 
-            uuid_connected = update_connected_dict(msg_list, uuid_connected, start_time, graph,  2, SEQUENCE_NUMBER, parser_cf)
-            graph, forward = update_graph(graph, msg_list, parser_cf, SEQUENCE_NUMBER)
+            uuid_connected = update_connected_dict(msg_list, uuid_connected, start_time, graph, 2, SEQUENCE_NUMBER, parser_cf)
+            graph, forward = update_graph(graph, msg_list, parser_cf , uuid_connected, SEQUENCE_NUMBER)
             threadLock.release()
 
             if (forward): 
@@ -87,15 +96,16 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
 
     s.close()
 
-def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit):
+def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit, nodes_names):
 
     #get peers uuids
     peers = parser_cf.get_peers()
     
     #constantly send keep_alive_signals
     while True:
-        threadLock.acquire(); print(uuid_connected);threadLock.release()
+        #threadLock.acquire(); print(uuid_connected);threadLock.release()
         #threadLock.acquire(); print(graph);threadLock.release()
+        #threadLock.acquire(); print(nodes_names); threadLock.release()
 
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -118,6 +128,9 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
             #Keep alive signals
             send_keep_alive_signals(s, server_address, parser_cf, peer_metric)
 
+            #Nodes names signals
+            send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names)
+
             #Link State Advertisement
             send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUMBER, parser_cf)
             
@@ -129,7 +142,6 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
         #update peers variable based on if anyone disconnected
         threadLock.acquire()
         peers = update_peers(peers, uuid_connected)
-        print("peers:", peers)
         threadLock.release()
         s.close()
 
@@ -159,3 +171,20 @@ def send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUM
             #print("Link Advertisement")
         except:
             print_lock("Could not send link state advertisement")
+
+def send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names):
+    for _ in range(3):
+        msg = "nodes_names"
+
+        #send connected names
+        for node_uuid in uuid_connected.keys():
+            if node_uuid != parser_cf.uuid and node_uuid in uuid_connected.keys() and "name" in uuid_connected[node_uuid].keys():
+                msg += ',' + node_uuid + ':' + uuid_connected[node_uuid]["name"]
+
+        #send names that may not be connected
+        for node_uuid in nodes_names.keys():
+            if node_uuid not in uuid_connected.keys():
+                msg += ',' + node_uuid + ':' + nodes_names[node_uuid]
+
+        s.sendto(msg.encode(), server_address)
+        time.sleep(0.01)

@@ -14,13 +14,13 @@ def add_node_and_peers_to_graph(parser_cf, graph):
     
     return graph
 
-def update_graph(graph, peer_info, parser_cf, SEQUENCE_NUMBER = -1):
+def update_graph(graph, peer_info, parser_cf, uuid_connected, SEQUENCE_NUMBER = -1):
     sender_uuid = peer_info['original_sender']; sender_seq_num = peer_info['sequence_number']
     forward = False
 
     if sender_seq_num > graph[sender_uuid]['sequence_number']:
         graph[sender_uuid]['sequence_number'] = sender_seq_num
-
+        
         for node_uuid, node_data in peer_info.items():
             if is_valid_node_uuid(node_uuid):
                 if node_uuid not in graph.keys() and node_uuid != parser_cf.uuid: 
