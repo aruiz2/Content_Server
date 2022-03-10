@@ -20,15 +20,22 @@ def djikstra(graph_map, nodes_data, source, destination):
     nodes_data[source] = 0
 
     for iteration in range(nodes):
+        #Only iterate through not visited nodes
         if curr_node not in visited:
             visited.add(curr_node)
             heap = []
+
             for nbor in graph_map[curr_node]:
                 if nbor not in visited:
-                    cost = nodes_data[curr_node] + graph_map[curr_node][nbor]
-                    if cost < nodes_data[nbor]:
-                        nodes_data[nbor] = cost
+                    #Calculate cost to nbor
+                    length = nodes_data[curr_node] + graph_map[curr_node][nbor]
+                    
+                    #Update min length of nbor
+                    if length < nodes_data[nbor]:
+                        nodes_data[nbor] = length
+
                     heapq.heappush(heap, [nodes_data[nbor], nbor])
             
         if heap: curr_node = heap[0][1]
+    
     return nodes_data[destination]
