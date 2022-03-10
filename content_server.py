@@ -6,8 +6,8 @@ from add_neighbor import *
 from node_thread import *
 from shortest_path import *
 from map_fn import *
+import config
 
-global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start, threadLock, all_info
 BUFSIZE = 1024
 threadLock = threading.Lock()
 uuid_nodes = dict()
@@ -15,7 +15,6 @@ uuid_connected = dict()
 start_time = time.time()
 time_limit = 7
 ka_signal_time = 0
-
 
 '''
 ****************************************************************************************************
@@ -33,8 +32,8 @@ def print_lock(message):
     threadLock.release()
 
 def content_server():
-
-    #parse the input
+    global BUFSIZE, threadLock, graph, uuid_nodes, uuid_connected, start, threadLock, all_info, killed_node
+    #parse the input    
     parser_t = OptionParser() 
     parser_t.add_option("-c", dest = "cf_path", help = "Please enter the path to the config file")
     (options, args) = parser_t.parse_args()
@@ -81,7 +80,10 @@ def content_server():
             threadLock.release()
 
         elif command == "kill":
-            pass          
+            threadLock.acquire()
+            config.killed_node = True
+            threadLock.release() 
+            exit()
 
     print_lock("Exited")
     s.close()

@@ -5,6 +5,7 @@ from config_file_parse import get_peers_uuids
 from link_state_advertisement import *
 from build_graph import *
 from nodes_names_functions import *
+import config
 
 def print_lock(message):
     threadLock.acquire()
@@ -23,6 +24,7 @@ THREADING CODE STARTS HERE
 BUFSIZE = 1024
 
 def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, start_time, time_limit, nodes_names):
+
     initial_seq_number = -1
     threadLock.acquire()
     #initialize uuid_connected
@@ -59,9 +61,14 @@ def start_client_server_threads(parser_cf, uuid_connected, threadLock, graph, st
     server.start()
 
 def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, graph, start_time, time_limit, nodes_names):
+    global server
 
     while True:
 
+        if config.killed_node:
+            server.join()
+            break
+        
         # accept message
         bytesAddressPair = s.recvfrom(BUFSIZE)
         msg_string, client_address = bytesAddressPair[0].decode(), bytesAddressPair[1]
@@ -105,7 +112,7 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
     s.close()
 
 def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, start_time, time_limit, nodes_names):
-
+    global client
     #get peers uuids
     peers = parser_cf.get_peers()
     
@@ -115,6 +122,11 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
         #threadLock.acquire(); print(graph);threadLock.release()
         #threadLock.acquire(); print(nodes_names); threadLock.release()
 
+        #Check if user kills node
+        if config.killed_node:
+            client.join()
+            break
+            
         node_uuids_removed = []
         #create client socket
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -127,7 +139,10 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
 
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
         for peer in peers: #peeer = [uuid, hostname, port, count]
-            peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]; peer_metric = graph[peer_uuid][parser_cf.uuid]
+            try:
+                peer_uuid = peer[0]; peer_host = peer[1]; peer_port = peer[2]; peer_metric = graph[peer_uuid][parser_cf.uuid]
+            except:
+                continue
             server_ip = socket.gethostbyname(peer_host)
             server_address = (server_ip, int(peer_port))
 
