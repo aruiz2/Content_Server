@@ -44,7 +44,6 @@ def remove_from_graph(rem_uuids, graph):
     for rem_uuid in rem_uuids:
         if rem_uuid != '':
             for node_uuid, node_uuid_dict in list(graph.items()):
-                print(node_uuid, node_uuid_dict)
                 if node_uuid == rem_uuid: 
                     graph.pop(node_uuid, None)
                     removed = True
