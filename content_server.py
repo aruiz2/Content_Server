@@ -101,8 +101,12 @@ def print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names):
         peer_dict["metric"] = graph[peer_uuid][parser_cf.uuid]
 
         #Add peer dict to neighbor dictonary
-        peer_name = nodes_names[peer_uuid]
-        active_neighbors["neighbors"][peer_name] = peer_dict
+        try:
+            peer_name = nodes_names[peer_uuid]
+            active_neighbors["neighbors"][peer_name] = peer_dict
+        except:
+            #If the name is not in nodes_names, then it is not connected
+            pass
     
     print(active_neighbors)
 
