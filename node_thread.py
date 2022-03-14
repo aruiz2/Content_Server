@@ -229,7 +229,9 @@ def send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes
 
         #send connected names
         for node_uuid in uuid_connected.keys():
-            if node_uuid != parser_cf.uuid and node_uuid in uuid_connected.keys() and "name" in uuid_connected[node_uuid].keys():
+            if node_uuid == parser_cf.uuid:
+                msg += ',' + node_uuid + ':' + parser_cf.name
+            elif node_uuid in uuid_connected.keys() and "name" in uuid_connected[node_uuid].keys():
                 msg += ',' + node_uuid + ':' + uuid_connected[node_uuid]["name"]
 
         #send names that may not be connected

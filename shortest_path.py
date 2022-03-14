@@ -33,7 +33,7 @@ def djikstra(graph_map, nodes_data, source, destination):
 
             for nbor in graph_map[curr_node].keys():
                 
-                nbor_dist = curr_dist + graph_map[curr_node][nbor]
+                nbor_dist = curr_dist + int(graph_map[curr_node][nbor])
                 
                 if nbor_dist < nodes_data[nbor]:
                     nodes_data[nbor] = nbor_dist
