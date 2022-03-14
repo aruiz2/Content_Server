@@ -15,7 +15,6 @@ class CFParser():
         self.peer_count = int(self.config_file_dict['peer_count'])
 
         self.peers = self.get_peers()
-        
     
     def __remove_whitespace_newline(self, msg):
         new_str = ""
@@ -28,7 +27,8 @@ class CFParser():
         File will be in the format of /private/18441/Project2/node21.conf
         Convert string into list of elements separated by '/', return last element
         '''
-        return config_file_path.split("/")[-1]
+        #return config_file_path.split(' ')[-1] #this is for SUBMIT
+        return config_file_path.split("/")[-1] #this is for my testing
 
     def __get_config_file_dict(self):
         f = open(self.config_file_str, 'r')

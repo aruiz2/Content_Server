@@ -63,10 +63,11 @@ def content_server():
         elif command == "uuid":
             threadLock.acquire()
             print({"uuid": parser_cf.uuid}); print('\n')
+            threadLock.release()
 
         elif command == "neighbors":
             threadLock.acquire()
-            print_active_neighbors(); print('\n')
+            print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names); print('\n')
             threadLock.release()
 
         elif command == "map":
@@ -76,7 +77,8 @@ def content_server():
 
         elif command == "rank":
             threadLock.acquire()
-            print(calculate_shortest_paths(build_map(graph, parser_cf, nodes_names)['map'], parser_cf.uuid)); print('\n')
+            source = nodes_names[parser_cf.uuid]
+            print(calculate_shortest_paths(build_map(graph, parser_cf, nodes_names)['map'], source)); print('\n')
             threadLock.release()
 
         elif command == "kill":
@@ -89,22 +91,17 @@ def content_server():
     s.close()
     sys.exit(0)
 
-def print_active_neighbors():
+def print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names):
     active_neighbors = {"neighbors" : dict()}
-
     for peer_uuid, peer_info in uuid_connected.items():
-        #if time is 0 peer has not connected yet
-        if peer_info['time'] == 0: continue
-
         #Build dictionary of peer
         peer_dict = dict(); 
         peer_dict["backend_port"] = peer_info['backend_port'] 
-        peer_dict["host"] = peer_info['host'] 
-        peer_dict["uuid"] = peer_uuid
-        peer_dict["metric"] = peer_info['metric']
+        peer_dict["host"] = peer_info['host']; peer_dict["uuid"] = peer_uuid
+        peer_dict["metric"] = graph[peer_uuid][parser_cf.uuid]
 
         #Add peer dict to neighbor dictonary
-        peer_name = peer_info['name']
+        peer_name = nodes_names[peer_uuid]
         active_neighbors["neighbors"][peer_name] = peer_dict
     
     print(active_neighbors)

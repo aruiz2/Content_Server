@@ -191,7 +191,7 @@ def send_node_disconnected_signals(s, removed_uuids, graph, server_address):
     for _ in range(3):
         try:
             s.sendto(msg.encode(), server_address)
-            time.sleep(0.01)
+            #time.sleep(0.01)
 
         except:
             print_lock("Could not send disconnected signal to a node")
@@ -206,7 +206,7 @@ def send_keep_alive_signals(s, server_address, parser_cf, peer_metric):
                             str(socket.gethostname()) + ":" +
                             str(peer_metric))
             s.sendto(ka_signal.encode(), server_address)
-            time.sleep(0.01)
+            #time.sleep(0.01)
             #print("Keep Alive")
         except:
             print_lock("Could not send keep alive signal to a node")
@@ -218,7 +218,7 @@ def send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUM
         try:
             link_adv_str = build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf)
             s.sendto(link_adv_str.encode(), server_address)
-            time.sleep(0.01)
+            #time.sleep(0.01)
             #print("Link Advertisement")
         except:
             print_lock("Could not send link state advertisement to a node")
@@ -239,7 +239,7 @@ def send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes
 
         try:
             s.sendto(msg.encode(), server_address)
-            time.sleep(0.01)
+            #time.sleep(0.01)
         except:
             print_lock("Could not send node_name signal to a node")
 
@@ -252,6 +252,7 @@ def forward_remove_from_graph(s, uuid_connected, rem_uuids, graph):
     msg = "remsignal"
     for rem_uuid in rem_uuids: msg += ':' + rem_uuid
 
+    #print("forwarding remove from graph! to:", neighbors_to_forward, "\n")
     for nbor in neighbors_to_forward:
         nbor_host = uuid_connected[nbor]['host']
         nbor_port = int(uuid_connected[nbor]['backend_port'])

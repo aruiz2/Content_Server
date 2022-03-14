@@ -86,7 +86,7 @@ def remove_from_connected_dict(uuid_connected, start_time, time_limit, graph):
         if uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
             uuid_connected.pop(uuid, None)
             graph, removed = remove_from_graph([uuid], graph)
-            print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - start_time))
+            #print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - start_time))
             node_uuids_removed.append(uuid)
     return uuid_connected, node_uuids_removed, graph
 
@@ -104,9 +104,6 @@ def update_peers(peers, uuid_connected):
         if peer_uuid in uuid_connected:
             new_peers.append(peer)
 
-    #TODO: IMPLEMENT SO THAT IT CAN ADD PEERS THAT WERE NOT CONNECTED. WE WOULD ALSO NEED THEIR PORT AND HOST NAME TO CONNECT TO THEM SO NEED TO THINK ABOUT THIS.
-    #add peers that were not previously connected
-
     #add new peer
     set_peers_uuids = set()
     for peer in new_peers: 
@@ -117,7 +114,6 @@ def update_peers(peers, uuid_connected):
         
         if uuid not in set_peers_uuids:
             peer = [uuid, uuid_connected[uuid]['host'], uuid_connected[uuid]['backend_port']]
-            print("peer: ", peer)
             new_peers.append(peer)
 
     return new_peers
