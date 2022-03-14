@@ -225,13 +225,10 @@ def send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUM
 
 def send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names):
     for _ in range(3):
-        msg = "nodes_names"
-
+        msg = "nodes_names," + parser_cf.uuid + ':' + parser_cf.name
         #send connected names
         for node_uuid in uuid_connected.keys():
-            if node_uuid == parser_cf.uuid:
-                msg += ',' + node_uuid + ':' + parser_cf.name
-            elif node_uuid in uuid_connected.keys() and "name" in uuid_connected[node_uuid].keys():
+            if node_uuid != parser_cf.uuid and node_uuid in uuid_connected.keys() and "name" in uuid_connected[node_uuid].keys():
                 msg += ',' + node_uuid + ':' + uuid_connected[node_uuid]["name"]
 
         #send names that may not be connected
