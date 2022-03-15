@@ -23,7 +23,7 @@ def build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf):
     #Set up metrics data for msg
     for node_uuid in graph.keys():
         for peer_uuid, metric in graph[node_uuid].items():
-            if peer_uuid != 'sequence_number':
+            if peer_uuid != 'sequence_number' and peer_uuid != 'connected':
 
                 if node_uuid != parser_cf.uuid:
                     msg[node_uuid][peer_uuid] = metric
@@ -63,7 +63,7 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
     for node_uuid in graph.keys(): msg[node_uuid] = dict()
     for node_uuid in graph.keys():
         for peer_uuid, metric in graph[node_uuid].items():
-            if peer_uuid != 'sequence_number':
+            if peer_uuid != 'sequence_number' and peer_uuid != 'connected':
 
                 if node_uuid != parser_cf.uuid:
                     msg[node_uuid][peer_uuid] = metric

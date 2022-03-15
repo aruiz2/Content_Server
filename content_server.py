@@ -98,7 +98,7 @@ def print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names):
         peer_dict = dict(); 
         peer_dict["backend_port"] = peer_info['backend_port'] 
         peer_dict["host"] = peer_info['host']; peer_dict["uuid"] = peer_uuid
-        peer_dict["metric"] = graph[peer_uuid][parser_cf.uuid]
+        peer_dict["metric"] = int(graph[peer_uuid][parser_cf.uuid])
 
         #Add peer dict to neighbor dictonary
         try:

@@ -25,7 +25,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
     elif time_entered == 2:
         original_sender_uuid = peer_info["original_sender"]; received_sequence_number = peer_info['sequence_number']
 
-        #Check if current sender is a new neigbor that was added to add to uuid_connected
+        #Check if current sender is a new neighbor that was added to add to uuid_connected
         current_sender_uuid = peer_info["current_sender"]
         if current_sender_uuid == original_sender_uuid and current_sender_uuid not in uuid_connected.keys(): 
             uuid_connected[current_sender_uuid] = {'sequence_number':-1, 'time': time.time() - start_time}
@@ -85,6 +85,7 @@ def remove_from_connected_dict(uuid_connected, start_time, time_limit, graph):
         time_past = curr_time - uuid_info['time']
         if uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
             uuid_connected.pop(uuid, None)
+            #print("removing node ", uuid, "from graph! already removed from uuid")
             graph, removed = remove_from_graph([uuid], graph)
             #print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - start_time))
             node_uuids_removed.append(uuid)

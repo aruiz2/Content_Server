@@ -94,7 +94,7 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
             rem_uuids = msg_string[9:].split(':')
             threadLock.acquire()
             graph, removed = remove_from_graph(rem_uuids, graph)
-            if removed: forward_remove_from_graph(s, uuid_connected, rem_uuids, graph) #TODO: Implement this function
+            if removed: forward_remove_from_graph(s, uuid_connected, rem_uuids, graph)
             threadLock.release()
 
         #Link State Advertisement
@@ -160,7 +160,8 @@ def send_data(parser_cf, threadLock, uuid_connected, SEQUENCE_NUMBER, graph, sta
             SEQUENCE_NUMBER += 1
 
             #Disconnected Signals - sent when a node disconnects
-            if node_uuids_removed != []: send_node_disconnected_signals(s, node_uuids_removed, graph, server_address)
+            if node_uuids_removed != []: 
+                send_node_disconnected_signals(s, node_uuids_removed, graph, server_address)
             
             threadLock.release()
         
@@ -226,6 +227,7 @@ def send_link_state_advertisement_signals(s, server_address, graph, SEQUENCE_NUM
 def send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names):
     for _ in range(3):
         msg = "nodes_names," + parser_cf.uuid + ':' + parser_cf.name
+        
         #send connected names
         for node_uuid in uuid_connected.keys():
             if node_uuid != parser_cf.uuid and node_uuid in uuid_connected.keys() and "name" in uuid_connected[node_uuid].keys():
