@@ -12,13 +12,14 @@ def add_node_and_peers_to_graph(parser_cf, graph):
         graph[peer_uuid][parser_cf.uuid] = int(peer_metric)
         graph[peer_uuid]['sequence_number'] = -1
         graph[peer_uuid]['connected'] = False
-     
+    
     return graph
 
 def update_graph(graph, peer_info, parser_cf, uuid_connected, SEQUENCE_NUMBER = -1):
     sender_uuid = peer_info['original_sender']; sender_seq_num = peer_info['sequence_number']
     forward = False
 
+    
     if sender_seq_num > graph[sender_uuid]['sequence_number']:
         prev_value = graph[sender_uuid]['sequence_number']
         graph[sender_uuid]['sequence_number'] = sender_seq_num
@@ -32,13 +33,15 @@ def update_graph(graph, peer_info, parser_cf, uuid_connected, SEQUENCE_NUMBER = 
                 for peer_uuid, peer_metric in node_data.items():
                     if peer_uuid not in graph.keys() and peer_uuid != parser_cf.uuid: 
                         graph[peer_uuid] = {'sequence_number':-1, 'connected':True}
-                    
+                        forward = True
+
                     if node_uuid != parser_cf.uuid:
                         graph[node_uuid][peer_uuid] = peer_metric
+                        forward = True
                     
                     if peer_uuid != parser_cf.uuid:
                         graph[peer_uuid][node_uuid] = peer_metric
-        forward = True
+                        forward = True
 
     return graph, forward
 

@@ -77,7 +77,7 @@ def server_thread(parser_cf, s, uuid_connected, threadLock, SEQUENCE_NUMBER, gra
         if msg_string[0:9] == "ka_signal": 
             msg_string = msg_string[9:].split(":")
 
-            threadLock.acquire(); 
+            threadLock.acquire()
             uuid_connected = update_connected_dict(msg_string, uuid_connected, start_time, graph, 1); 
             threadLock.release()
 
