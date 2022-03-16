@@ -1,19 +1,21 @@
 import socket
 import json
+import config as c
 '''
 Decodes Link State Advertisement String to a list format
 '''
 def decode_link_state_advertisement_str(msg_string):
+    #print('decode msg before:', msg_string)
     return json.loads(msg_string)
     
 '''
 Builds Link State Advertisement string to be sent based on current data
 '''
-def build_link_state_advertisement_str(graph, SEQUENCE_NUMBER, parser_cf):
+def build_link_state_advertisement_str(graph, parser_cf):
     #Set Up Initial data for msg
     msg = dict()
     msg['original_sender'] = parser_cf.uuid
-    msg['sequence_number'] = SEQUENCE_NUMBER
+    msg['sequence_number'] = c.SEQUENCE_NUMBER
     msg['current_sender'] = parser_cf.uuid
 
     #Initialize empty dictonaries
@@ -74,12 +76,17 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
 
     #forward the link advertisement to each neighbor
     for nbor_uuid in neighbors_to_forward_adv:
-        #get nbor data
-        nbor_host = uuid_connected[nbor_uuid]['host']; 
-        nbor_port = int(uuid_connected[nbor_uuid]['backend_port']); 
 
-        #connect to neighbor and send message
-        server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
-        s.sendto(msg.encode(), server_address)
+        #TODO: THIS IF-TRY HE ANADIDO PARA MENOS BUGS PERO NO SE SI ES CORRECTO
+        try:
+            #get nbor data
+            nbor_host = uuid_connected[nbor_uuid]['host']
+            nbor_port = int(uuid_connected[nbor_uuid]['backend_port']); 
+
+            #connect to neighbor and send message
+            server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
+            s.sendto(msg.encode(), server_address)
+        except:
+            pass
     
     return uuid_connected

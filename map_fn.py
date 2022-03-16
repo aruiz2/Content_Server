@@ -18,7 +18,6 @@ def build_map(graph, parser_cf, nodes_names):
                 if peer_uuid != "sequence_number" and peer_uuid in nodes_names.keys():
                     peer_name = parser_cf.name if peer_uuid == parser_cf.uuid else nodes_names[peer_uuid]
                     
-                    #print("map:", map)
                     if node_name in map["map"] and peer_name in map["map"]:
                         map["map"][node_name][peer_name] = int(metric)
                         map["map"][peer_name][node_name] = int(metric)

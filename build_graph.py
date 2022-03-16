@@ -54,10 +54,6 @@ def remove_from_graph(rem_uuids, graph):
                 if node_uuid == rem_uuid: 
                     graph[node_uuid]['connected'] = False
                     removed = True
-                # elif rem_uuid in node_uuid_dict.keys():
-                #     node_uuid_dict.pop(rem_uuid, None)
-                #     graph[node_uuid] = node_uuid_dict
-                #     removed = True
     
     return graph, removed
 
