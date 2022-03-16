@@ -75,9 +75,23 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
         #Keep Alive Signal
         if msg_string[0:9] == "ka_signal": 
             msg_string = msg_string[9:].split(":")
+            ka_uuid = msg_string[0]; ka_metric = msg_string[4]
 
+            #update the uuid_connected
             c.threadLock.acquire()
-            uuid_connected, added = update_connected_dict(msg_string, uuid_connected, start_time, graph, 1);
+            uuid_connected, added = update_connected_dict(msg_string, uuid_connected, start_time, graph, 1)
+            #Update the graph
+            try:
+                if graph[ka_uuid]['connected'] == False: added = True
+                graph[ka_uuid]['connected'] = True
+                graph[ka_uuid]['time'] = time.time() - start.time
+                graph[ka_uuid][parser_cf.uuid] = int(ka_metric)
+                graph[ka_uuid]['sequence_number'] = 0
+            except:
+                added = True
+                graph[ka_uuid] = {'sequence_number': 0,'connected': True, parser_cf.uuid: ka_metric}
+            
+            # print(graph)
             c.threadLock.release()
             
             #New node added -> Link State Advertisement
@@ -94,6 +108,10 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
                     server_ip, server_port = socket.gethostbyname(peer_host), int(peer_port)
                     server_address = (server_ip, server_port)
 
+                    #Nodes names signals
+                    send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names)
+
+                    #Link state signals
                     send_link_state_advertisement_signals(s, server_address, graph, parser_cf)
             c.SEQUENCE_NUMBER += 1
 
@@ -101,6 +119,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
         elif msg_string[0:11] == "nodes_names":
             msg_string = msg_string[12:].split(',')
             
+            #print('received nodes_names signal')
             c.threadLock.acquire()
             nodes_names = update_nodes_names(msg_string, nodes_names)
             c.threadLock.release()
@@ -126,6 +145,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
             new_nbor_host = new_nbor_data[3]
             new_nbor_metric = int(new_nbor_data[4])
             sent_seq_num = int(new_nbor_data[5])
+            new_nbor_peer = new_nbor_data[6]
 
             #Add to uuid_connected the new neighbor and forward it to the rest of the neighbors
 
@@ -134,13 +154,20 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
                 uuid_connected[new_nbor_uuid] = {'name':new_nbor_name, 
                                                 'backend_port':int(new_nbor_port), 
                                                 'host':new_nbor_host, 
-                                                'sequence_number':int(sent_seq_num),
                                                 'time': 0}
-                #TODO: FORWARD MESSAGE, TIENES QUE HACER ESTO DE VERDAD!
+                
+                #TODO: Need to add to graph, make sure this is right
+                graph[new_nbor_uuid] = {'connected':True, 'sequence_number':sent_seq_num, new_nbor_peer:new_nbor_metric}
+                try:
+                    graph[new_nbor_peer][new_nbor_uuid] = new_nbor_metric
+                    graph[new_nbor_peer]['sequence_number'] = sent_seq_num
+                except: 
+                    graph[new_nbor_peer] = {'connected':True, 'sequence_number':sent_seq_num, new_nbor_uuid:new_nbor_metric}
+
+                #Forward message
                 for peer in parser_cf.get_peers(): #peer : [uuid, host, port, metric]
                     server_ip, server_port = socket.gethostbyname(peer[1]), int(peer[2])
                     server_address = (server_ip, server_port)
-
                     s.sendto(msg_string.encode(), server_address)
                     
         #Link State Advertisement
@@ -180,7 +207,7 @@ def send_data(parser_cf, uuid_connected, graph, start_time, time_limit, nodes_na
         
         #make updates to uuid_connected nodes times
         c.threadLock.acquire()
-        uuid_connected, node_uuids_removed, graph = remove_from_connected_dict(uuid_connected, start_time, time_limit, graph)
+        uuid_connected, node_uuids_removed, graph = check_connected_to_remove_from_graph(uuid_connected, start_time, time_limit, graph)
         c.threadLock.release()
 
         #print("Node uuid: %s || Node backend port: %d" %(parser_cf.uuid, parser_cf.backend_port))
@@ -198,9 +225,9 @@ def send_data(parser_cf, uuid_connected, graph, start_time, time_limit, nodes_na
             #Keep alive signals
             send_keep_alive_signals(s, server_address, parser_cf, peer_metric)
 
-            #Nodes names signals
-            send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names)
-
+            # #Nodes names signals
+            # send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names)
+            
             #Disconnected Signals - sent when a node disconnects
             if node_uuids_removed != []: 
                 send_node_disconnected_signals(s, node_uuids_removed, graph, server_address)
@@ -212,6 +239,7 @@ def send_data(parser_cf, uuid_connected, graph, start_time, time_limit, nodes_na
         #update peers variable based on if anyone disconnected
         c.threadLock.acquire()
         peers = update_peers(peers, uuid_connected)
+        uuid_connected = update_connected_names(uuid_connected, nodes_names)
         c.threadLock.release()
         s.close()
 
@@ -248,6 +276,8 @@ def send_keep_alive_signals(s, server_address, parser_cf, peer_metric):
                             str(parser_cf.backend_port) + ":" + 
                             str(socket.gethostname()) + ":" +
                             str(peer_metric))
+            
+            #print('sending ||   ', ka_signal, ' || to ', server_address)
             s.sendto(ka_signal.encode(), server_address)
             #time.sleep(0.01)
             #print("Keep Alive")
@@ -257,6 +287,8 @@ def send_keep_alive_signals(s, server_address, parser_cf, peer_metric):
             #c.threadLock.acquire();print("sending signal " + ka_signal); c.threadLock.release()
 
 def send_link_state_advertisement_signals(s, server_address, graph, parser_cf):
+
+    #print('sending link state advertisement')
     for i in range(3):
         try:
             link_adv_str = build_link_state_advertisement_str(graph, parser_cf)
@@ -305,8 +337,12 @@ def forward_remove_from_graph(s, uuid_connected, rem_uuids, graph):
 
     #print("forwarding remove from graph! to:", neighbors_to_forward, "\n")
     for nbor in neighbors_to_forward:
-        nbor_host = uuid_connected[nbor]['host']
-        nbor_port = int(uuid_connected[nbor]['backend_port'])
+        #TODO: THIS MIGHT NOT BE THE WAY TO DO IT, CHECK WHICH WAY MIGHT BE BEST
+        try:
+            nbor_host = uuid_connected[nbor]['host']
+            nbor_port = int(uuid_connected[nbor]['backend_port'])
 
-        server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
-        s.sendto(msg.encode(), server_address)
+            server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
+            s.sendto(msg.encode(), server_address)
+
+        except: pass

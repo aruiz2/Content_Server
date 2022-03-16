@@ -29,6 +29,7 @@ def add_neighbor(input, uuid_connected, graph, parser_cf):
         #send link
         send_link_state_advertisement_signals(s, server_address, graph, parser_cf)
     c.SEQUENCE_NUMBER += 1
+    return uuid_connected, graph
 
 
 def parse_data(input):
@@ -75,11 +76,5 @@ def add_neighbor_to_uuidconnected_and_graph(uuid_connected, graph, parsed_data, 
     #add neighbor to graph
     graph[uuid_neighbor] = {'sequence_number':-1, 'connected':True}
     graph[uuid_neighbor][parser_cf.uuid] = metric_neighbor
-
-    #send new neighbor signal to neighbors
-    msg = 'new_neighbor,' + uuid_neighbor + ',' + name_neighbor + ',' + str(port_neighbor)+ ',' + host_neighbor + ',' + str(metric_neighbor) + ',' +    str(c.SEQUENCE_NUMBER)
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    send_new_neighbor_signals(s, msg, parser_cf, uuid_connected) 
 
     return uuid_connected, graph

@@ -56,7 +56,7 @@ def content_server():
 
         command = input()
         if command[:11] == "addneighbor":
-            add_neighbor(command[11:], uuid_connected, graph, parser_cf)
+            uuid_connected, graph = add_neighbor(command[11:], uuid_connected, graph, parser_cf)
 
         elif command == "uuid":
             c.threadLock.acquire()
@@ -85,6 +85,7 @@ def content_server():
             c.threadLock.release() 
             exit()
 
+        #These commands are for my debugging
         elif command == "graph":
             c.threadLock.acquire()
             print(graph); print('\n')
@@ -93,6 +94,11 @@ def content_server():
         elif command == "connected":
             c.threadLock.acquire()
             print(uuid_connected); print('\n')
+            c.threadLock.release()
+
+        elif command == "names":
+            c.threadLock.acquire()
+            print(nodes_names)
             c.threadLock.release()
 
     print_lock("Exited")

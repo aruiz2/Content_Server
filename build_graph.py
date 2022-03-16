@@ -34,14 +34,16 @@ def update_graph(graph, peer_info, parser_cf, uuid_connected, SEQUENCE_NUMBER = 
                     if peer_uuid not in graph.keys() and peer_uuid != parser_cf.uuid: 
                         graph[peer_uuid] = {'sequence_number':-1, 'connected':True}
                         forward = True
-
+    
                     if node_uuid != parser_cf.uuid:
-                        graph[node_uuid][peer_uuid] = peer_metric
-                        forward = True
+                        if peer_uuid not in graph[node_uuid]:
+                            graph[node_uuid][peer_uuid] = peer_metric
+                            forward = True
                     
                     if peer_uuid != parser_cf.uuid:
-                        graph[peer_uuid][node_uuid] = peer_metric
-                        forward = True
+                        if node_uuid not in graph[peer_uuid]:
+                            graph[peer_uuid][node_uuid] = peer_metric
+                            forward = True
 
     return graph, forward
 

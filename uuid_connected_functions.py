@@ -12,14 +12,16 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
     #time = 1 --> keep alive signal
     if time_entered == 1:
         peer_uuid = peer_info[0]; peer_name = peer_info[1]; peer_port = peer_info[2]; peer_host = peer_info[3]
-        
+
         #to account for new neighbors added from addneighbor from terminal
         if peer_uuid not in uuid_connected.keys(): 
             uuid_connected[peer_uuid] = {'time':time.time() - start_time}
             added = True
         
         #this chekcs at the beginning when first connection is made between neighbors nodes
-        if uuid_connected[peer_uuid]['time'] == 0: added = True
+        elif uuid_connected[peer_uuid]['time'] == 0: 
+            added = True
+
 
         #fill in rest of information
         uuid_connected[peer_uuid]['name'] = peer_name
@@ -30,11 +32,11 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
     #time = 2 --> link state advertisement
     elif time_entered == 2:
         original_sender_uuid = peer_info["original_sender"]; received_sequence_number = peer_info['sequence_number']
-
+        
         #Check if current sender is a new neighbor that was added to add to uuid_connected
         current_sender_uuid = peer_info["current_sender"]
         if current_sender_uuid == original_sender_uuid and current_sender_uuid not in uuid_connected.keys(): 
-            uuid_connected[current_sender_uuid] = {'sequence_number':-1, 'time': time.time() - start_time}
+            uuid_connected[current_sender_uuid] = {'time': time.time() - start_time}
             added = True
         
         #Check if original sender is in the graph, if not add it to the graph
@@ -53,7 +55,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
                         if peer_uuid != parser_cf.uuid: 
 
                             #Add new peer if neighbor to uuid_connected!
-                            if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers :
+                            if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers:
                                 uuid_connected = add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid)
                                 added = True
                         
@@ -87,13 +89,13 @@ def add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid):
 Removes a uuid from the connected dictionary if 
 last keep alive signal was received over our time limit.
 '''
-def remove_from_connected_dict(uuid_connected, start_time, time_limit, graph):
+def check_connected_to_remove_from_graph(uuid_connected, start_time, time_limit, graph):
     node_uuids_removed = []
     for uuid, uuid_info in list(uuid_connected.items()):
         curr_time = time.time() - start_time
         time_past = curr_time - uuid_info['time']
         if uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
-            uuid_connected.pop(uuid, None)
+            # uuid_connected.pop(uuid, None)
             #print("removing node ", uuid, "from graph! already removed from uuid")
             graph, removed = remove_from_graph([uuid], graph)
             #print("******************************************************\nRemoving '%s' from dictionary which had time %d and current time is %d" %(uuid_info['name'], uuid_info['time'], time.time() - start_time))
@@ -129,3 +131,12 @@ def update_peers(peers, uuid_connected):
             except: pass
 
     return new_peers
+
+def update_connected_names(uuid_connected, nodes_names):
+    for uuid, uuid_dict in uuid_connected.items():
+        try:
+            if uuid_dict['name'] == '':
+                uuid_dict['name'] = nodes_names[uuid]
+        except:
+                pass
+    return uuid_connected
