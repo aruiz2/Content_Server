@@ -53,7 +53,7 @@ def remove_from_graph(rem_uuids, graph):
     for rem_uuid in rem_uuids:
         if rem_uuid != '':
             for node_uuid, node_uuid_dict in list(graph.items()):
-                if node_uuid == rem_uuid: 
+                if node_uuid == rem_uuid and graph[node_uuid]['connected'] == True: 
                     graph[node_uuid]['connected'] = False
                     removed = True
     

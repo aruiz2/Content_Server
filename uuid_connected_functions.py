@@ -94,7 +94,7 @@ def check_connected_to_remove_from_graph(uuid_connected, start_time, time_limit,
     for uuid, uuid_info in list(uuid_connected.items()):
         curr_time = time.time() - start_time
         time_past = curr_time - uuid_info['time']
-        if uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
+        if graph[uuid]['connected'] and uuid_info['time'] != 0 and time_past > time_limit:  #val != 0 takes care of the case where the node has not connected yet at the beginning
             # uuid_connected.pop(uuid, None)
             #print("removing node ", uuid, "from graph! already removed from uuid")
             graph, removed = remove_from_graph([uuid], graph)

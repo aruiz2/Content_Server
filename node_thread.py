@@ -130,6 +130,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
 
         #Node Disconnected Signal
         elif msg_string[0:9] == "remsignal":
+            print('received remove signal!')
             rem_uuids = msg_string[9:].split(':')
             c.threadLock.acquire()
             graph, removed = remove_from_graph(rem_uuids, graph)
@@ -177,7 +178,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
         #Link State Advertisement
         else:
             msg_list = decode_link_state_advertisement_str(msg_string)
-            print('received a link state! ', msg_list)
+            #print('received a link state! ', msg_list)
 
             c.threadLock.acquire(); 
             uuid_connected, added = update_connected_dict(msg_list, uuid_connected, start_time, graph, 2, parser_cf)
@@ -348,9 +349,11 @@ def forward_remove_from_graph(s, uuid_connected, rem_uuids, graph):
         except: pass
 
 def forward_nodes_names_signal(s, msg, uuid_connected, graph):
-    for nbor in uuid_connected.keys():
-        nbor_host = uuid_connected[nbor]['host']
-        nbor_port = int(uuid_connected[nbor]['backend_port'])
+    try:
+        for nbor in uuid_connected.keys():
+            nbor_host = uuid_connected[nbor]['host']
+            nbor_port = int(uuid_connected[nbor]['backend_port'])
 
-        server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
-        s.sendto(msg.encode(), server_address)
+            server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
+            s.sendto(msg.encode(), server_address)
+    except: pass
