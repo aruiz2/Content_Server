@@ -56,7 +56,7 @@ def content_server():
 
         command = input()
         if command[:11] == "addneighbor":
-            uuid_connected, graph = add_neighbor(command[11:], uuid_connected, graph, parser_cf)
+            uuid_connected, graph = add_neighbor(command[11:], uuid_connected, graph, parser_cf, nodes_names)
 
         elif command == "uuid":
             c.threadLock.acquire()

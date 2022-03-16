@@ -5,7 +5,7 @@ import config as c
 from uuid_connected_functions import update_peers
 from node_thread import *
 
-def add_neighbor(input, uuid_connected, graph, parser_cf):
+def add_neighbor(input, uuid_connected, graph, parser_cf, nodes_names):
     #1.Parse Data
     parsed_data = parse_data(input)
 
@@ -26,8 +26,12 @@ def add_neighbor(input, uuid_connected, graph, parser_cf):
         server_ip, server_port = socket.gethostbyname(peer_host), int(peer_port)
         server_address = (server_ip, server_port)
 
-        #send link
+        #send link state signal
         send_link_state_advertisement_signals(s, server_address, graph, parser_cf)
+
+        #send nodes names signal
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        send_nodes_names_signals(s, server_address, parser_cf, uuid_connected, nodes_names)
     c.SEQUENCE_NUMBER += 1
     return uuid_connected, graph
 
