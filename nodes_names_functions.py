@@ -4,7 +4,7 @@ def update_nodes_names(msg_string, nodes_names):
     for i in range(n_msg_string): msg_string[i] = msg_string[i].split(':')
     
     for node_uuid, node_name in msg_string:
-        if node_uuid not in nodes_names.keys() or nodes_names[node_uuid] == '': 
+        if node_uuid not in nodes_names.keys() or (nodes_names[node_uuid] == '' and node_name != '')  : 
             added = True
             nodes_names[node_uuid] = node_name
     return nodes_names, added

@@ -88,9 +88,10 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
 
             #connect to neighbor and send message
             server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
-            print('forwarding:', msg)
-            s.sendto(msg.encode(), server_address)
+            for _ in range(3):
+                s.sendto(msg.encode(), server_address)
         except:
-            pass
+            print_lock("COULD NOT FORWARD BECAUSE NOT ACCESS TO PORT OR HOST, FIX THIS!")
+            break
     
     return uuid_connected

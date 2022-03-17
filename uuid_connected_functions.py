@@ -32,7 +32,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
         
     #time = 2 --> link state advertisement
     elif time_entered == 2:
-        print('peer_info:', peer_info)
+        #print(peer_info)
         original_sender_uuid = peer_info["original_sender"]; received_sequence_number = peer_info['sequence_number']
         
         #Check if current sender is a new neighbor that was added to add to uuid_connected

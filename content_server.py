@@ -108,7 +108,7 @@ def content_server():
 def print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names):
     active_neighbors = {"neighbors" : dict()}
     for peer_uuid, peer_info in uuid_connected.items():
-        if peer_uuid != parser_cf.uuid:
+        if peer_uuid != parser_cf.uuid and graph[peer_uuid]['connected']:
             #Build dictionary of peer
             peer_dict = dict(); add = True
             peer_dict["backend_port"] = peer_info['backend_port'] 
