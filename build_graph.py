@@ -50,11 +50,14 @@ def update_graph(graph, peer_info, parser_cf, uuid_connected, SEQUENCE_NUMBER = 
 '''Doesnt remove marks as disconnected but same idea'''
 def remove_from_graph(rem_uuids, graph):
     removed = False
+    print(rem_uuids)
+    sent_seq_num = int(rem_uuids[-1])
     for rem_uuid in rem_uuids:
         if rem_uuid != '':
             for node_uuid, node_uuid_dict in list(graph.items()):
                 if node_uuid == rem_uuid and graph[node_uuid]['connected'] == True: 
                     graph[node_uuid]['connected'] = False
+                    graph[node_uuid]['sequence_number'] = sent_seq_num
                     removed = True
     
     return graph, removed

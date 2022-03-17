@@ -93,8 +93,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
             # print(graph)
             c.threadLock.release()
             
-            #TODO: ADDED IS ALWAYS TRUE, PLEASE FIX THIS
-            #New node added -> Link State Advertisement
+            #New node added -> Link State Advertisement to all other nodes
             if added:
                 peers = update_peers(parser_cf.get_peers(), uuid_connected)
                 for peer in peers:
@@ -130,11 +129,10 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
 
         #Node Disconnected Signal
         elif msg_string[0:9] == "remsignal":
-            print('received remove signal!')
-            rem_uuids = msg_string[9:].split(':')
+            rem_uuids = msg_string[9:].split(':'); sent_seq_num = rem_uuids[-1]
             c.threadLock.acquire()
             graph, removed = remove_from_graph(rem_uuids, graph)
-            if removed: forward_remove_from_graph(s, uuid_connected, rem_uuids, graph)
+            if removed: forward_remove_from_graph(s, uuid_connected, rem_uuids, graph, sent_seq_num)
             c.threadLock.release()
 
         #New Node Signal
@@ -177,6 +175,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
                     
         #Link State Advertisement
         else:
+            #print(msg_list)
             msg_list = decode_link_state_advertisement_str(msg_string)
             #print('received a link state! ', msg_list)
 
@@ -263,6 +262,7 @@ def send_node_disconnected_signals(s, removed_uuids, graph, server_address):
     #Construct message to be sent
     msg = "remsignal"
     for rem_uuid in removed_uuids: msg += ':' + rem_uuid
+    msg += ':' + str(c.SEQUENCE_NUMBER)
 
     #Send message to nodes we are connected to
     for _ in range(3):
@@ -333,10 +333,12 @@ def send_new_neighbor_signals(s, msg, parser_cf, uuid_connected):
             s.sendto(msg.encode(), server_address)
 
 
-def forward_remove_from_graph(s, uuid_connected, rem_uuids, graph):
+def forward_remove_from_graph(s, uuid_connected, rem_uuids, graph, sent_seq_num):
     msg = "remsignal"
     for rem_uuid in rem_uuids: msg += ':' + rem_uuid
+    msg += str(sent_seq_num)
 
+    print('hi forwarding remove from graph  ')
     for nbor in uuid_connected.keys():
         #TODO: THIS MIGHT NOT BE THE WAY TO DO IT, CHECK WHICH WAY MIGHT BE BEST
         try:
