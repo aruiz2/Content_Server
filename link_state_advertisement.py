@@ -62,7 +62,9 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
     msg['original_sender'] = original_sender_uuid
     msg['sequence_number'] = original_sender_seq_num
     msg['current_sender'] = parser_cf.uuid
-    for node_uuid in graph.keys(): msg[node_uuid] = dict()
+
+    for node_uuid in graph.keys():
+        msg[node_uuid] = dict()
     for node_uuid in graph.keys():
         for peer_uuid, metric in graph[node_uuid].items():
             if peer_uuid != 'sequence_number' and peer_uuid != 'connected':
@@ -72,6 +74,7 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
 
                 if peer_uuid != parser_cf.uuid:
                     msg[peer_uuid][node_uuid] = metric
+
     msg = json.dumps(msg)
 
     #forward the link advertisement to each neighbor
@@ -85,6 +88,7 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
 
             #connect to neighbor and send message
             server_ip = socket.gethostbyname(nbor_host); server_address = (server_ip, nbor_port)
+            print('forwarding:', msg)
             s.sendto(msg.encode(), server_address)
         except:
             pass

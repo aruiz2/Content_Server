@@ -32,6 +32,7 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
         
     #time = 2 --> link state advertisement
     elif time_entered == 2:
+        print('peer_info:', peer_info)
         original_sender_uuid = peer_info["original_sender"]; received_sequence_number = peer_info['sequence_number']
         
         #Check if current sender is a new neighbor that was added to add to uuid_connected
@@ -48,17 +49,19 @@ def update_connected_dict(peer_info, uuid_connected, start_time, graph, time_ent
         if received_sequence_number > graph[original_sender_uuid]['sequence_number']:
 
             for node, node_data in peer_info.items():
-                
-                if node != "original_sender" and node != "sequence_number" and node != "current_sender":
-                    for peer_uuid, peer_metric in node_data.items():
+                if is_valid_node_uuid(node):
+                    
+                    if node != "original_sender" and node != "sequence_number" and node != "current_sender":
                         
-                        #check peer is not current node
-                        if peer_uuid != parser_cf.uuid: 
-
-                            #Add new peer if neighbor to uuid_connected!
-                            if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers:
-                                uuid_connected = add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid)
-                                added = True
+                        for peer_uuid, peer_metric in node_data.items():
+                            if is_valid_node_uuid(peer_uuid):
+                                #check peer is not current node
+                                if peer_uuid != parser_cf.uuid: 
+                                    
+                                    #Add new peer if neighbor to uuid_connected!
+                                    if peer_uuid not in uuid_connected and peer_uuid in parser_cf.peers:
+                                        uuid_connected = add_neighbor_to_uuid_connected(parser_cf, uuid_connected, peer_uuid)
+                                        added = True
                         
     #initialize the uuid_connected        
     else: 

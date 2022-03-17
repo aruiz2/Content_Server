@@ -175,7 +175,7 @@ def server_thread(parser_cf, s, uuid_connected, graph, start_time, time_limit, n
                     
         #Link State Advertisement
         else:
-            #print(msg_list)
+            print(msg_list)
             msg_list = decode_link_state_advertisement_str(msg_string)
             #print('received a link state! ', msg_list)
 
@@ -338,7 +338,6 @@ def forward_remove_from_graph(s, uuid_connected, rem_uuids, graph, sent_seq_num)
     for rem_uuid in rem_uuids: msg += ':' + rem_uuid
     msg += str(sent_seq_num)
 
-    print('hi forwarding remove from graph  ')
     for nbor in uuid_connected.keys():
         #TODO: THIS MIGHT NOT BE THE WAY TO DO IT, CHECK WHICH WAY MIGHT BE BEST
         try:
