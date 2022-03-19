@@ -60,23 +60,23 @@ def content_server():
 
         elif command == "uuid":
             c.threadLock.acquire()
-            print({"uuid": parser_cf.uuid}); print('\n')
+            print({"uuid": parser_cf.uuid})
             c.threadLock.release()
 
         elif command == "neighbors":
             c.threadLock.acquire()
-            print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names); print('\n')
+            print_active_neighbors(graph, uuid_connected, parser_cf, nodes_names)
             c.threadLock.release()
 
         elif command == "map":
             c.threadLock.acquire()
-            print(build_map(graph, parser_cf, nodes_names)); print('\n')
+            print(build_map(graph, parser_cf, nodes_names))
             c.threadLock.release()
 
         elif command == "rank":
             c.threadLock.acquire()
             source = nodes_names[parser_cf.uuid]
-            print(calculate_shortest_paths(build_map(graph, parser_cf, nodes_names)['map'], source)); print('\n')
+            print(calculate_shortest_paths(build_map(graph, parser_cf, nodes_names)['map'], source))
             c.threadLock.release()
 
         elif command == "kill":
@@ -88,12 +88,12 @@ def content_server():
         #These commands are for my debugging
         elif command == "graph":
             c.threadLock.acquire()
-            print(graph); print('\n')
+            print(graph)
             c.threadLock.release()
 
         elif command == "connected":
             c.threadLock.acquire()
-            print(uuid_connected); print('\n')
+            print(uuid_connected)
             c.threadLock.release()
 
         elif command == "names":

@@ -5,7 +5,6 @@ import config as c
 Decodes Link State Advertisement String to a list format
 '''
 def decode_link_state_advertisement_str(msg_string):
-    #print('decode msg before:', msg_string)
     return json.loads(msg_string)
     
 '''
@@ -80,7 +79,6 @@ def forward_link_advertisement_to_neighbors(msg_list, uuid_connected, parser_cf,
     #forward the link advertisement to each neighbor
     for nbor_uuid in neighbors_to_forward_adv:
 
-        #TODO: THIS IF-TRY HE ANADIDO PARA MENOS BUGS PERO NO SE SI ES CORRECTO
         try:
             #get nbor data
             nbor_host = uuid_connected[nbor_uuid]['host']
